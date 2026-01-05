@@ -1,271 +1,351 @@
 "use client";
 
-import { useState } from "react";
-import { Search, Send, User, Clock, Tag } from "lucide-react";
-import StatusBadge from "@/components/StatusBadge";
+import { useState, useEffect, useRef } from "react";
+import {
+  Search,
+  Send,
+  MessageSquare,
+  ChevronDown,
+  Loader2,
+  RefreshCw,
+  X,
+  User,
+} from "lucide-react";
+import { api, Conversation } from "@/lib/api";
+import { format } from "date-fns";
+import { useAuth } from "@/lib/auth-context";
 
-// Mock conversations data
-const mockConversations = [
-  {
-    id: "CONV-001",
-    customer: { name: "Max Müller", email: "max@email.com" },
-    subject: "Order status inquiry - ORD-2025-001",
-    status: "open",
-    priority: "high",
-    relatedOrderId: "ORD-2025-001",
-    lastMessage: "Hello, I wanted to check on the status of my order...",
-    lastMessageTime: "10 min ago",
-    unreadCount: 2,
-    messages: [
-      { id: "1", sender: "customer", name: "Max Müller", content: "Hello, I wanted to check on the status of my order. It's been a few days and I haven't received any updates.", time: "2025-01-05 14:22" },
-      { id: "2", sender: "customer", name: "Max Müller", content: "The order number is ORD-2025-001. Can you please check?", time: "2025-01-05 14:23" },
-    ],
-  },
-  {
-    id: "CONV-002",
-    customer: { name: "Sarah Klein", email: "sarah@email.com" },
-    subject: "Return request for iPhone 13",
-    status: "in_progress",
-    priority: "medium",
-    lastMessage: "I would like to return the iPhone 13 I purchased...",
-    lastMessageTime: "25 min ago",
-    unreadCount: 0,
-    messages: [
-      { id: "1", sender: "customer", name: "Sarah Klein", content: "I would like to return the iPhone 13 I purchased last week. It's not what I expected.", time: "2025-01-05 13:55" },
-      { id: "2", sender: "employee", name: "Support Team", content: "Hello Sarah, I'm sorry to hear that. Could you please tell me more about the issue?", time: "2025-01-05 14:10" },
-    ],
-  },
-  {
-    id: "CONV-003",
-    customer: { name: "Peter Hoffmann", email: "peter@email.com" },
-    subject: "Question about MacBook warranty",
-    status: "waiting",
-    priority: "low",
-    lastMessage: "Does the refurbished MacBook come with warranty?",
-    lastMessageTime: "1 hour ago",
-    unreadCount: 1,
-    messages: [
-      { id: "1", sender: "customer", name: "Peter Hoffmann", content: "Does the refurbished MacBook come with warranty?", time: "2025-01-05 13:15" },
-    ],
-  },
-  {
-    id: "CONV-004",
-    customer: { name: "Anna Schmidt", email: "anna@email.com" },
-    subject: "Shipping delay complaint",
-    status: "resolved",
-    priority: "high",
-    lastMessage: "Thank you for resolving this issue!",
-    lastMessageTime: "2 hours ago",
-    unreadCount: 0,
-    messages: [
-      { id: "1", sender: "customer", name: "Anna Schmidt", content: "My order was supposed to arrive yesterday but I still haven't received it!", time: "2025-01-05 10:00" },
-      { id: "2", sender: "employee", name: "Support Team", content: "I apologize for the delay. Let me check on this for you.", time: "2025-01-05 10:15" },
-      { id: "3", sender: "employee", name: "Support Team", content: "I've tracked your package and it will be delivered today. I've also applied a 10% discount to your next order.", time: "2025-01-05 10:30" },
-      { id: "4", sender: "customer", name: "Anna Schmidt", content: "Thank you for resolving this issue!", time: "2025-01-05 12:00" },
-    ],
-  },
-];
+const statusFilters = ["all", "open", "in_progress", "waiting", "resolved", "closed"];
+const priorityColors: Record<string, string> = {
+  low: "bg-slate-100 text-slate-600",
+  medium: "bg-blue-100 text-blue-700",
+  high: "bg-amber-100 text-amber-700",
+  urgent: "bg-red-100 text-red-700",
+};
+
+const statusColors: Record<string, string> = {
+  open: "bg-emerald-100 text-emerald-700",
+  in_progress: "bg-blue-100 text-blue-700",
+  waiting: "bg-amber-100 text-amber-700",
+  resolved: "bg-slate-100 text-slate-600",
+  closed: "bg-slate-100 text-slate-500",
+};
 
 export default function MessagesPage() {
+  const { user } = useAuth();
+  const [conversations, setConversations] = useState<Conversation[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
-  const [selectedConversation, setSelectedConversation] = useState<typeof mockConversations[0] | null>(mockConversations[0]);
-  const [newMessage, setNewMessage] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
+  const [selectedConversation, setSelectedConversation] = useState<Conversation | null>(null);
+  const [newMessage, setNewMessage] = useState("");
+  const [isSending, setIsSending] = useState(false);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  const filteredConversations = mockConversations.filter((conv) => {
+  const fetchConversations = async () => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const data = await api.getConversations();
+      setConversations(data);
+    } catch (err: any) {
+      setError(err.message || "Failed to load conversations");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchConversations();
+  }, []);
+
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [selectedConversation?.messages]);
+
+  const filteredConversations = conversations.filter((conv) => {
     const matchesSearch =
-      conv.customer.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      conv.subject.toLowerCase().includes(searchQuery.toLowerCase());
+      conv.customer_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      conv.subject?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      conv.customer_email?.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesStatus = statusFilter === "all" || conv.status === statusFilter;
     return matchesSearch && matchesStatus;
   });
 
-  const handleSendMessage = () => {
-    if (!newMessage.trim() || !selectedConversation) return;
-    // In a real app, this would call the API
-    console.log("Sending message:", newMessage);
-    setNewMessage("");
+  const stats = {
+    total: conversations.length,
+    open: conversations.filter((c) => c.status === "open").length,
+    inProgress: conversations.filter((c) => c.status === "in_progress").length,
+    unread: conversations.reduce((sum, c) => sum + (c.unread_count || 0), 0),
   };
+
+  const handleSendMessage = async () => {
+    if (!selectedConversation || !newMessage.trim()) return;
+
+    setIsSending(true);
+    try {
+      await api.sendMessage(selectedConversation.id, newMessage.trim());
+      setNewMessage("");
+      const updatedConv = await api.getConversation(selectedConversation.id);
+      setSelectedConversation(updatedConv);
+      await fetchConversations();
+    } catch (err: any) {
+      setError(err.message || "Failed to send message");
+    } finally {
+      setIsSending(false);
+    }
+  };
+
+  const handleUpdateStatus = async (status: string) => {
+    if (!selectedConversation) return;
+
+    try {
+      await api.updateConversationStatus(selectedConversation.id, status);
+      await fetchConversations();
+      setSelectedConversation({ ...selectedConversation, status: status as any });
+    } catch (err: any) {
+      setError(err.message || "Failed to update status");
+    }
+  };
+
+  const formatDate = (dateString: string) => {
+    try {
+      const date = new Date(dateString);
+      const now = new Date();
+      const diff = now.getTime() - date.getTime();
+      const minutes = Math.floor(diff / 60000);
+      const hours = Math.floor(diff / 3600000);
+      const days = Math.floor(diff / 86400000);
+
+      if (minutes < 60) return `${minutes}m ago`;
+      if (hours < 24) return `${hours}h ago`;
+      if (days < 7) return `${days}d ago`;
+      return format(date, "MMM d");
+    } catch {
+      return dateString;
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <div className="flex flex-col items-center gap-4">
+          <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
+          <p className="text-slate-500">Loading conversations...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div>
-        <h1 className="text-2xl font-bold text-gray-900">Messages</h1>
-        <p className="text-gray-500 mt-1">Communicate with customers</p>
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-bold text-slate-900">Messages</h1>
+          <p className="text-slate-500 mt-1">Communicate with customers</p>
+        </div>
+        <button
+          onClick={fetchConversations}
+          className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-slate-600 bg-white border border-slate-200 rounded-xl hover:bg-slate-50 transition-colors"
+        >
+          <RefreshCw size={16} />
+          Refresh
+        </button>
       </div>
+
+      {error && (
+        <div className="p-4 bg-red-50 border border-red-200 rounded-xl text-red-600 text-sm flex items-center justify-between">
+          <span>{error}</span>
+          <button onClick={() => setError(null)}>
+            <X size={18} />
+          </button>
+        </div>
+      )}
 
       {/* Stats */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="bg-white rounded-lg border border-gray-200 p-4">
-          <p className="text-sm text-gray-500">Total Conversations</p>
-          <p className="text-2xl font-semibold mt-1">{mockConversations.length}</p>
+        <div className="bg-white rounded-2xl border border-slate-200 p-5">
+          <p className="text-sm font-medium text-slate-500">Total</p>
+          <p className="text-3xl font-bold text-slate-900 mt-1">{stats.total}</p>
         </div>
-        <div className="bg-white rounded-lg border border-gray-200 p-4">
-          <p className="text-sm text-gray-500">Open</p>
-          <p className="text-2xl font-semibold mt-1 text-blue-600">
-            {mockConversations.filter((c) => c.status === "open").length}
-          </p>
+        <div className="bg-white rounded-2xl border border-slate-200 p-5">
+          <p className="text-sm font-medium text-slate-500">Open</p>
+          <p className="text-3xl font-bold text-emerald-600 mt-1">{stats.open}</p>
         </div>
-        <div className="bg-white rounded-lg border border-gray-200 p-4">
-          <p className="text-sm text-gray-500">In Progress</p>
-          <p className="text-2xl font-semibold mt-1 text-yellow-600">
-            {mockConversations.filter((c) => c.status === "in_progress").length}
-          </p>
+        <div className="bg-white rounded-2xl border border-slate-200 p-5">
+          <p className="text-sm font-medium text-slate-500">In Progress</p>
+          <p className="text-3xl font-bold text-blue-600 mt-1">{stats.inProgress}</p>
         </div>
-        <div className="bg-white rounded-lg border border-gray-200 p-4">
-          <p className="text-sm text-gray-500">Unread Messages</p>
-          <p className="text-2xl font-semibold mt-1 text-red-600">
-            {mockConversations.reduce((sum, c) => sum + c.unreadCount, 0)}
-          </p>
+        <div className="bg-white rounded-2xl border border-slate-200 p-5">
+          <p className="text-sm font-medium text-slate-500">Unread</p>
+          <p className="text-3xl font-bold text-amber-600 mt-1">{stats.unread}</p>
         </div>
       </div>
 
       {/* Main Content */}
-      <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+      <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden">
         <div className="grid grid-cols-1 lg:grid-cols-3 h-[600px]">
-          {/* Conversation List */}
-          <div className="border-r border-gray-200 flex flex-col">
-            {/* Search */}
-            <div className="p-4 border-b border-gray-200">
+          {/* Conversations List */}
+          <div className="border-r border-slate-200 flex flex-col">
+            <div className="p-4 border-b border-slate-100 space-y-3">
               <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
                 <input
                   type="text"
                   placeholder="Search conversations..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full pl-9 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
               </div>
-              <div className="flex gap-2 mt-3">
-                {["all", "open", "in_progress", "resolved"].map((status) => (
-                  <button
-                    key={status}
-                    onClick={() => setStatusFilter(status)}
-                    className={`px-3 py-1 text-xs rounded-full transition-colors ${
-                      statusFilter === status
-                        ? "bg-blue-100 text-blue-700"
-                        : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-                    }`}
-                  >
-                    {status === "all" ? "All" : status.replace("_", " ")}
-                  </button>
-                ))}
+              <div className="relative">
+                <select
+                  value={statusFilter}
+                  onChange={(e) => setStatusFilter(e.target.value)}
+                  className="w-full appearance-none px-3 py-2 pr-8 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  {statusFilters.map((status) => (
+                    <option key={status} value={status}>
+                      {status === "all" ? "All Status" : status.replace("_", " ").charAt(0).toUpperCase() + status.slice(1).replace("_", " ")}
+                    </option>
+                  ))}
+                </select>
+                <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" size={14} />
               </div>
             </div>
 
-            {/* List */}
             <div className="flex-1 overflow-y-auto">
-              {filteredConversations.map((conv) => (
-                <div
-                  key={conv.id}
-                  onClick={() => setSelectedConversation(conv)}
-                  className={`p-4 border-b border-gray-100 cursor-pointer transition-colors ${
-                    selectedConversation?.id === conv.id ? "bg-blue-50" : "hover:bg-gray-50"
-                  }`}
-                >
-                  <div className="flex items-start justify-between mb-1">
-                    <p className="font-medium text-gray-900 text-sm">{conv.customer.name}</p>
-                    <div className="flex items-center gap-2">
-                      {conv.unreadCount > 0 && (
-                        <span className="w-5 h-5 bg-red-500 text-white text-xs rounded-full flex items-center justify-center">
-                          {conv.unreadCount}
+              {filteredConversations.length > 0 ? (
+                filteredConversations.map((conv) => (
+                  <div
+                    key={conv.id}
+                    onClick={() => setSelectedConversation(conv)}
+                    className={`p-4 border-b border-slate-100 cursor-pointer transition-colors ${
+                      selectedConversation?.id === conv.id ? "bg-blue-50" : "hover:bg-slate-50"
+                    }`}
+                  >
+                    <div className="flex items-start gap-3">
+                      <div className="w-10 h-10 bg-gradient-to-br from-slate-200 to-slate-300 rounded-full flex items-center justify-center flex-shrink-0">
+                        <span className="text-sm font-semibold text-slate-600">
+                          {conv.customer_name?.charAt(0).toUpperCase() || "?"}
                         </span>
-                      )}
-                      <StatusBadge status={conv.priority} variant="priority" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2">
+                          <p className="font-semibold text-slate-900 truncate">{conv.customer_name}</p>
+                          {conv.unread_count > 0 && (
+                            <span className="w-5 h-5 bg-blue-600 text-white text-xs rounded-full flex items-center justify-center">
+                              {conv.unread_count}
+                            </span>
+                          )}
+                        </div>
+                        <p className="text-sm text-slate-600 truncate">{conv.subject}</p>
+                        <div className="flex items-center gap-2 mt-1">
+                          <span className={`px-2 py-0.5 text-xs font-medium rounded-full ${priorityColors[conv.priority] || priorityColors.low}`}>
+                            {conv.priority}
+                          </span>
+                          <span className="text-xs text-slate-400">{formatDate(conv.updated_at || conv.created_at)}</span>
+                        </div>
+                      </div>
                     </div>
                   </div>
-                  <p className="text-sm text-gray-700 truncate">{conv.subject}</p>
-                  <p className="text-xs text-gray-500 truncate mt-1">{conv.lastMessage}</p>
-                  <div className="flex items-center justify-between mt-2">
-                    <StatusBadge status={conv.status} variant="conversation" />
-                    <span className="text-xs text-gray-400">{conv.lastMessageTime}</span>
-                  </div>
+                ))
+              ) : (
+                <div className="p-8 text-center">
+                  <MessageSquare size={40} className="mx-auto text-slate-300" />
+                  <p className="mt-2 text-sm text-slate-500">No conversations found</p>
                 </div>
-              ))}
+              )}
             </div>
           </div>
 
-          {/* Conversation Detail */}
+          {/* Chat Area */}
           <div className="lg:col-span-2 flex flex-col">
             {selectedConversation ? (
               <>
-                {/* Header */}
-                <div className="p-4 border-b border-gray-200">
-                  <div className="flex items-start justify-between">
+                <div className="p-4 border-b border-slate-100 flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 bg-gradient-to-br from-slate-200 to-slate-300 rounded-full flex items-center justify-center">
+                      <span className="text-sm font-semibold text-slate-600">
+                        {selectedConversation.customer_name?.charAt(0).toUpperCase() || "?"}
+                      </span>
+                    </div>
                     <div>
-                      <h3 className="font-semibold text-gray-900">{selectedConversation.subject}</h3>
-                      <div className="flex items-center gap-4 mt-1 text-sm text-gray-500">
-                        <span className="flex items-center gap-1">
-                          <User size={14} />
-                          {selectedConversation.customer.name}
-                        </span>
-                        <span className="flex items-center gap-1">
-                          <Tag size={14} />
-                          {selectedConversation.id}
-                        </span>
-                      </div>
+                      <p className="font-semibold text-slate-900">{selectedConversation.customer_name}</p>
+                      <p className="text-xs text-slate-500">{selectedConversation.customer_email}</p>
                     </div>
-                    <select className="text-sm border border-gray-200 rounded-lg px-3 py-1.5">
-                      <option value="open">Open</option>
-                      <option value="in_progress">In Progress</option>
-                      <option value="waiting">Waiting</option>
-                      <option value="resolved">Resolved</option>
-                      <option value="closed">Closed</option>
-                    </select>
                   </div>
+                  <select
+                    value={selectedConversation.status}
+                    onChange={(e) => handleUpdateStatus(e.target.value)}
+                    className={`px-3 py-1.5 rounded-lg text-sm font-medium border-0 ${statusColors[selectedConversation.status] || statusColors.open}`}
+                  >
+                    {statusFilters.filter(s => s !== "all").map((status) => (
+                      <option key={status} value={status}>
+                        {status.replace("_", " ").charAt(0).toUpperCase() + status.slice(1).replace("_", " ")}
+                      </option>
+                    ))}
+                  </select>
                 </div>
 
-                {/* Messages */}
-                <div className="flex-1 overflow-y-auto p-4 space-y-4">
-                  {selectedConversation.messages.map((message) => (
-                    <div
-                      key={message.id}
-                      className={`flex ${message.sender === "employee" ? "justify-end" : "justify-start"}`}
-                    >
-                      <div
-                        className={`max-w-[80%] rounded-lg p-3 ${
-                          message.sender === "employee"
-                            ? "bg-blue-600 text-white"
-                            : "bg-gray-100 text-gray-900"
-                        }`}
-                      >
-                        <p className="text-xs font-medium mb-1 opacity-75">{message.name}</p>
-                        <p className="text-sm">{message.content}</p>
-                        <p className={`text-xs mt-2 ${message.sender === "employee" ? "text-blue-200" : "text-gray-400"}`}>
-                          {message.time}
-                        </p>
+                <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-slate-50">
+                  <div className="text-center mb-4">
+                    <span className="px-3 py-1 bg-white text-sm text-slate-600 rounded-full border border-slate-200">
+                      {selectedConversation.subject}
+                    </span>
+                  </div>
+
+                  {selectedConversation.messages?.map((message, index) => {
+                    const isAdmin = message.sender_type === "admin";
+                    return (
+                      <div key={message.id || index} className={`flex ${isAdmin ? "justify-end" : "justify-start"}`}>
+                        <div
+                          className={`max-w-[70%] rounded-2xl px-4 py-3 ${
+                            isAdmin
+                              ? "bg-blue-600 text-white rounded-br-md"
+                              : "bg-white text-slate-900 border border-slate-200 rounded-bl-md"
+                          }`}
+                        >
+                          <p className="text-sm whitespace-pre-wrap">{message.content}</p>
+                          <p className={`text-xs mt-1 ${isAdmin ? "text-blue-200" : "text-slate-400"}`}>
+                            {message.sender_name} - {formatDate(message.created_at)}
+                          </p>
+                        </div>
                       </div>
-                    </div>
-                  ))}
+                    );
+                  })}
+                  <div ref={messagesEndRef} />
                 </div>
 
-                {/* Reply Input */}
-                <div className="p-4 border-t border-gray-200">
-                  <div className="flex gap-3">
+                <div className="p-4 border-t border-slate-100">
+                  <div className="flex items-center gap-3">
                     <input
                       type="text"
                       value={newMessage}
                       onChange={(e) => setNewMessage(e.target.value)}
-                      onKeyPress={(e) => e.key === "Enter" && handleSendMessage()}
-                      placeholder="Type your reply..."
-                      className="flex-1 px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      onKeyDown={(e) => e.key === "Enter" && !e.shiftKey && handleSendMessage()}
+                      placeholder="Type your message..."
+                      className="flex-1 px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                     />
                     <button
                       onClick={handleSendMessage}
-                      disabled={!newMessage.trim()}
-                      className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                      disabled={isSending || !newMessage.trim()}
+                      className="p-2.5 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                     >
-                      <Send size={18} />
-                      Send
+                      {isSending ? <Loader2 size={18} className="animate-spin" /> : <Send size={18} />}
                     </button>
                   </div>
                 </div>
               </>
             ) : (
-              <div className="flex-1 flex items-center justify-center text-gray-500">
-                Select a conversation to view
+              <div className="flex-1 flex items-center justify-center bg-slate-50">
+                <div className="text-center">
+                  <MessageSquare size={48} className="mx-auto text-slate-300" />
+                  <p className="mt-4 font-medium text-slate-900">Select a conversation</p>
+                  <p className="text-sm text-slate-500 mt-1">Choose from the list to view messages</p>
+                </div>
               </div>
             )}
           </div>
