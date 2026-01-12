@@ -4,31 +4,30 @@ import { useState, useEffect, useRef } from "react";
 import {
   Search,
   Send,
-  MessageSquare,
   ChevronDown,
   Loader2,
   RefreshCw,
   X,
-  User,
 } from "lucide-react";
 import { api, Conversation } from "@/lib/api";
 import { format } from "date-fns";
 import { useAuth } from "@/lib/auth-context";
 
 const statusFilters = ["all", "open", "in_progress", "waiting", "resolved", "closed"];
-const priorityColors: Record<string, string> = {
-  low: "bg-slate-100 text-slate-600",
-  medium: "bg-blue-100 text-blue-700",
-  high: "bg-amber-100 text-amber-700",
-  urgent: "bg-red-100 text-red-700",
+
+const priorityColors: Record<string, { bg: string; text: string }> = {
+  low: { bg: "rgba(113, 113, 122, 0.1)", text: "#71717a" },
+  medium: { bg: "rgba(59, 130, 246, 0.1)", text: "#3b82f6" },
+  high: { bg: "rgba(245, 158, 11, 0.1)", text: "#f59e0b" },
+  urgent: { bg: "rgba(239, 68, 68, 0.1)", text: "#ef4444" },
 };
 
-const statusColors: Record<string, string> = {
-  open: "bg-emerald-100 text-emerald-700",
-  in_progress: "bg-blue-100 text-blue-700",
-  waiting: "bg-amber-100 text-amber-700",
-  resolved: "bg-slate-100 text-slate-600",
-  closed: "bg-slate-100 text-slate-500",
+const statusColors: Record<string, { bg: string; text: string }> = {
+  open: { bg: "rgba(16, 185, 129, 0.1)", text: "#10b981" },
+  in_progress: { bg: "rgba(59, 130, 246, 0.1)", text: "#3b82f6" },
+  waiting: { bg: "rgba(245, 158, 11, 0.1)", text: "#f59e0b" },
+  resolved: { bg: "rgba(113, 113, 122, 0.1)", text: "#71717a" },
+  closed: { bg: "rgba(82, 82, 91, 0.1)", text: "#52525b" },
 };
 
 export default function MessagesPage() {
@@ -41,7 +40,21 @@ export default function MessagesPage() {
   const [selectedConversation, setSelectedConversation] = useState<Conversation | null>(null);
   const [newMessage, setNewMessage] = useState("");
   const [isSending, setIsSending] = useState(false);
+  const [isLoadingConversation, setIsLoadingConversation] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  const handleSelectConversation = async (conv: Conversation) => {
+    setIsLoadingConversation(true);
+    try {
+      const fullConversation = await api.getConversation(conv.id);
+      setSelectedConversation(fullConversation);
+    } catch (err: any) {
+      setError(err.message || "Failed to load conversation");
+      setSelectedConversation(conv);
+    } finally {
+      setIsLoadingConversation(false);
+    }
+  };
 
   const fetchConversations = async () => {
     setIsLoading(true);
@@ -129,82 +142,159 @@ export default function MessagesPage() {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center min-h-[60vh]">
-        <div className="flex flex-col items-center gap-4">
-          <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
-          <p className="text-slate-500">Loading conversations...</p>
-        </div>
+      <div
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          minHeight: '60vh',
+        }}
+      >
+        <Loader2
+          size={32}
+          style={{ color: '#3b82f6', animation: 'spin 1s linear infinite' }}
+        />
       </div>
     );
   }
 
   return (
-    <div className="space-y-6">
+    <div>
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold text-slate-900">Messages</h1>
-          <p className="text-slate-500 mt-1">Communicate with customers</p>
+      <div style={{ marginBottom: '32px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '16px' }}>
+          <div>
+            <p style={{ fontSize: '11px', fontWeight: 600, letterSpacing: '0.1em', color: '#71717a', textTransform: 'uppercase', margin: 0 }}>
+              Support
+            </p>
+            <h1 style={{ fontSize: '28px', fontWeight: 600, color: '#fafafa', margin: '4px 0 0 0' }}>Messages</h1>
+          </div>
+          <button
+            onClick={fetchConversations}
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '8px',
+              padding: '10px 16px',
+              backgroundColor: '#27272a',
+              border: '1px solid #3f3f46',
+              borderRadius: '10px',
+              fontSize: '13px',
+              fontWeight: 500,
+              color: '#a1a1aa',
+              cursor: 'pointer',
+            }}
+          >
+            <RefreshCw size={14} />
+            Refresh
+          </button>
         </div>
-        <button
-          onClick={fetchConversations}
-          className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-slate-600 bg-white border border-slate-200 rounded-xl hover:bg-slate-50 transition-colors"
-        >
-          <RefreshCw size={16} />
-          Refresh
-        </button>
       </div>
 
       {error && (
-        <div className="p-4 bg-red-50 border border-red-200 rounded-xl text-red-600 text-sm flex items-center justify-between">
+        <div
+          style={{
+            padding: '16px',
+            backgroundColor: 'rgba(239, 68, 68, 0.1)',
+            border: '1px solid rgba(239, 68, 68, 0.2)',
+            borderRadius: '12px',
+            color: '#ef4444',
+            fontSize: '13px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            marginBottom: '24px',
+          }}
+        >
           <span>{error}</span>
-          <button onClick={() => setError(null)}>
-            <X size={18} />
+          <button onClick={() => setError(null)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#ef4444' }}>
+            <X size={16} />
           </button>
         </div>
       )}
 
       {/* Stats */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="bg-white rounded-2xl border border-slate-200 p-5">
-          <p className="text-sm font-medium text-slate-500">Total</p>
-          <p className="text-3xl font-bold text-slate-900 mt-1">{stats.total}</p>
+      <div
+        style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(4, 1fr)',
+          gap: '16px',
+          marginBottom: '24px',
+        }}
+      >
+        <div style={{ backgroundColor: '#16181d', border: '1px solid #27272a', borderRadius: '12px', padding: '20px' }}>
+          <p style={{ fontSize: '12px', color: '#71717a', margin: 0 }}>Total</p>
+          <p style={{ fontSize: '24px', fontWeight: 600, color: '#fafafa', fontFamily: '"JetBrains Mono", monospace', margin: '4px 0 0 0' }}>
+            {stats.total}
+          </p>
         </div>
-        <div className="bg-white rounded-2xl border border-slate-200 p-5">
-          <p className="text-sm font-medium text-slate-500">Open</p>
-          <p className="text-3xl font-bold text-emerald-600 mt-1">{stats.open}</p>
+        <div style={{ backgroundColor: '#16181d', border: '1px solid #27272a', borderRadius: '12px', padding: '20px' }}>
+          <p style={{ fontSize: '12px', color: '#71717a', margin: 0 }}>Open</p>
+          <p style={{ fontSize: '24px', fontWeight: 600, color: '#10b981', fontFamily: '"JetBrains Mono", monospace', margin: '4px 0 0 0' }}>
+            {stats.open}
+          </p>
         </div>
-        <div className="bg-white rounded-2xl border border-slate-200 p-5">
-          <p className="text-sm font-medium text-slate-500">In Progress</p>
-          <p className="text-3xl font-bold text-blue-600 mt-1">{stats.inProgress}</p>
+        <div style={{ backgroundColor: '#16181d', border: '1px solid #27272a', borderRadius: '12px', padding: '20px' }}>
+          <p style={{ fontSize: '12px', color: '#71717a', margin: 0 }}>In Progress</p>
+          <p style={{ fontSize: '24px', fontWeight: 600, color: '#3b82f6', fontFamily: '"JetBrains Mono", monospace', margin: '4px 0 0 0' }}>
+            {stats.inProgress}
+          </p>
         </div>
-        <div className="bg-white rounded-2xl border border-slate-200 p-5">
-          <p className="text-sm font-medium text-slate-500">Unread</p>
-          <p className="text-3xl font-bold text-amber-600 mt-1">{stats.unread}</p>
+        <div style={{ backgroundColor: '#16181d', border: '1px solid #27272a', borderRadius: '12px', padding: '20px' }}>
+          <p style={{ fontSize: '12px', color: '#71717a', margin: 0 }}>Unread</p>
+          <p style={{ fontSize: '24px', fontWeight: 600, color: '#f59e0b', fontFamily: '"JetBrains Mono", monospace', margin: '4px 0 0 0' }}>
+            {stats.unread}
+          </p>
         </div>
       </div>
 
       {/* Main Content */}
-      <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden">
-        <div className="grid grid-cols-1 lg:grid-cols-3 h-[600px]">
+      <div style={{ backgroundColor: '#16181d', border: '1px solid #27272a', borderRadius: '16px', overflow: 'hidden' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: '340px 1fr', minHeight: 'calc(100vh - 340px)' }}>
           {/* Conversations List */}
-          <div className="border-r border-slate-200 flex flex-col">
-            <div className="p-4 border-b border-slate-100 space-y-3">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
+          <div style={{ borderRight: '1px solid #27272a', display: 'flex', flexDirection: 'column' }}>
+            <div style={{ padding: '16px', borderBottom: '1px solid #27272a' }}>
+              <div style={{ position: 'relative', marginBottom: '12px' }}>
+                <Search
+                  size={14}
+                  style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: '#52525b' }}
+                />
                 <input
                   type="text"
                   placeholder="Search conversations..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full pl-9 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  style={{
+                    width: '100%',
+                    paddingLeft: '36px',
+                    paddingRight: '16px',
+                    paddingTop: '10px',
+                    paddingBottom: '10px',
+                    backgroundColor: '#0f1117',
+                    border: '1px solid #27272a',
+                    borderRadius: '10px',
+                    color: '#fafafa',
+                    fontSize: '13px',
+                    outline: 'none',
+                  }}
                 />
               </div>
-              <div className="relative">
+              <div style={{ position: 'relative' }}>
                 <select
                   value={statusFilter}
                   onChange={(e) => setStatusFilter(e.target.value)}
-                  className="w-full appearance-none px-3 py-2 pr-8 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  style={{
+                    width: '100%',
+                    appearance: 'none',
+                    padding: '10px 32px 10px 12px',
+                    backgroundColor: '#0f1117',
+                    border: '1px solid #27272a',
+                    borderRadius: '10px',
+                    color: '#fafafa',
+                    fontSize: '13px',
+                    outline: 'none',
+                    cursor: 'pointer',
+                  }}
                 >
                   {statusFilters.map((status) => (
                     <option key={status} value={status}>
@@ -212,145 +302,278 @@ export default function MessagesPage() {
                     </option>
                   ))}
                 </select>
-                <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" size={14} />
+                <ChevronDown
+                  size={12}
+                  style={{ position: 'absolute', right: '8px', top: '50%', transform: 'translateY(-50%)', color: '#52525b', pointerEvents: 'none' }}
+                />
               </div>
             </div>
 
-            <div className="flex-1 overflow-y-auto">
+            <div style={{ flex: 1, overflow: 'auto' }}>
               {filteredConversations.length > 0 ? (
-                filteredConversations.map((conv) => (
-                  <div
-                    key={conv.id}
-                    onClick={() => setSelectedConversation(conv)}
-                    className={`p-4 border-b border-slate-100 cursor-pointer transition-colors ${
-                      selectedConversation?.id === conv.id ? "bg-blue-50" : "hover:bg-slate-50"
-                    }`}
-                  >
-                    <div className="flex items-start gap-3">
-                      <div className="w-10 h-10 bg-gradient-to-br from-slate-200 to-slate-300 rounded-full flex items-center justify-center flex-shrink-0">
-                        <span className="text-sm font-semibold text-slate-600">
-                          {conv.customer_name?.charAt(0).toUpperCase() || "?"}
-                        </span>
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2">
-                          <p className="font-semibold text-slate-900 truncate">{conv.customer_name}</p>
-                          {conv.unread_count > 0 && (
-                            <span className="w-5 h-5 bg-blue-600 text-white text-xs rounded-full flex items-center justify-center">
-                              {conv.unread_count}
-                            </span>
-                          )}
-                        </div>
-                        <p className="text-sm text-slate-600 truncate">{conv.subject}</p>
-                        <div className="flex items-center gap-2 mt-1">
-                          <span className={`px-2 py-0.5 text-xs font-medium rounded-full ${priorityColors[conv.priority] || priorityColors.low}`}>
-                            {conv.priority}
+                filteredConversations.map((conv) => {
+                  const priority = priorityColors[conv.priority] || priorityColors.low;
+                  const isSelected = selectedConversation?.id === conv.id;
+                  return (
+                    <div
+                      key={conv.id}
+                      onClick={() => handleSelectConversation(conv)}
+                      style={{
+                        padding: '16px',
+                        borderBottom: '1px solid #27272a',
+                        cursor: 'pointer',
+                        backgroundColor: isSelected ? 'rgba(59, 130, 246, 0.1)' : 'transparent',
+                        transition: 'background-color 0.2s',
+                      }}
+                      onMouseEnter={(e) => { if (!isSelected) e.currentTarget.style.backgroundColor = '#1c1e24'; }}
+                      onMouseLeave={(e) => { if (!isSelected) e.currentTarget.style.backgroundColor = 'transparent'; }}
+                    >
+                      <div style={{ display: 'flex', alignItems: 'flex-start', gap: '12px' }}>
+                        <div
+                          style={{
+                            width: '36px',
+                            height: '36px',
+                            backgroundColor: '#6366f1',
+                            borderRadius: '10px',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            flexShrink: 0,
+                          }}
+                        >
+                          <span style={{ fontSize: '12px', fontWeight: 600, color: 'white' }}>
+                            {conv.customer_name?.charAt(0).toUpperCase() || "?"}
                           </span>
-                          <span className="text-xs text-slate-400">{formatDate(conv.updated_at || conv.created_at)}</span>
+                        </div>
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                            <p style={{ fontWeight: 600, color: '#fafafa', fontSize: '13px', margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                              {conv.customer_name}
+                            </p>
+                            {conv.unread_count > 0 && (
+                              <span
+                                style={{
+                                  width: '20px',
+                                  height: '20px',
+                                  backgroundColor: '#3b82f6',
+                                  color: 'white',
+                                  fontSize: '10px',
+                                  borderRadius: '50%',
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  justifyContent: 'center',
+                                }}
+                              >
+                                {conv.unread_count}
+                              </span>
+                            )}
+                          </div>
+                          <p style={{ fontSize: '12px', color: '#71717a', margin: '2px 0 0 0', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                            {conv.subject}
+                          </p>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '4px' }}>
+                            <span
+                              style={{
+                                padding: '2px 8px',
+                                fontSize: '10px',
+                                fontWeight: 500,
+                                borderRadius: '6px',
+                                backgroundColor: priority.bg,
+                                color: priority.text,
+                              }}
+                            >
+                              {conv.priority}
+                            </span>
+                            <span style={{ fontSize: '10px', color: '#52525b' }}>
+                              {formatDate(conv.updated_at || conv.created_at)}
+                            </span>
+                          </div>
                         </div>
                       </div>
                     </div>
-                  </div>
-                ))
+                  );
+                })
               ) : (
-                <div className="p-8 text-center">
-                  <MessageSquare size={40} className="mx-auto text-slate-300" />
-                  <p className="mt-2 text-sm text-slate-500">No conversations found</p>
+                <div style={{ padding: '32px', textAlign: 'center' }}>
+                  <div style={{ fontSize: '32px', color: '#3f3f46', marginBottom: '16px' }}>💬</div>
+                  <p style={{ fontSize: '13px', color: '#52525b', margin: 0 }}>No conversations found</p>
                 </div>
               )}
             </div>
           </div>
 
           {/* Chat Area */}
-          <div className="lg:col-span-2 flex flex-col">
+          <div style={{ display: 'flex', flexDirection: 'column' }}>
             {selectedConversation ? (
               <>
-                <div className="p-4 border-b border-slate-100 flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 bg-gradient-to-br from-slate-200 to-slate-300 rounded-full flex items-center justify-center">
-                      <span className="text-sm font-semibold text-slate-600">
+                <div style={{ padding: '16px', borderBottom: '1px solid #27272a', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                    <div
+                      style={{
+                        width: '36px',
+                        height: '36px',
+                        backgroundColor: '#6366f1',
+                        borderRadius: '10px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                      }}
+                    >
+                      <span style={{ fontSize: '12px', fontWeight: 600, color: 'white' }}>
                         {selectedConversation.customer_name?.charAt(0).toUpperCase() || "?"}
                       </span>
                     </div>
                     <div>
-                      <p className="font-semibold text-slate-900">{selectedConversation.customer_name}</p>
-                      <p className="text-xs text-slate-500">{selectedConversation.customer_email}</p>
+                      <p style={{ fontWeight: 600, color: '#fafafa', fontSize: '14px', margin: 0 }}>{selectedConversation.customer_name}</p>
+                      <p style={{ fontSize: '11px', color: '#52525b', margin: '2px 0 0 0' }}>{selectedConversation.customer_email}</p>
                     </div>
                   </div>
-                  <select
-                    value={selectedConversation.status}
-                    onChange={(e) => handleUpdateStatus(e.target.value)}
-                    className={`px-3 py-1.5 rounded-lg text-sm font-medium border-0 ${statusColors[selectedConversation.status] || statusColors.open}`}
-                  >
-                    {statusFilters.filter(s => s !== "all").map((status) => (
-                      <option key={status} value={status}>
-                        {status.replace("_", " ").charAt(0).toUpperCase() + status.slice(1).replace("_", " ")}
-                      </option>
-                    ))}
-                  </select>
+                  {(() => {
+                    const status = statusColors[selectedConversation.status] || statusColors.open;
+                    return (
+                      <select
+                        value={selectedConversation.status}
+                        onChange={(e) => handleUpdateStatus(e.target.value)}
+                        style={{
+                          padding: '6px 12px',
+                          borderRadius: '10px',
+                          fontSize: '12px',
+                          fontWeight: 500,
+                          border: 'none',
+                          backgroundColor: status.bg,
+                          color: status.text,
+                          cursor: 'pointer',
+                          outline: 'none',
+                        }}
+                      >
+                        {statusFilters.filter(s => s !== "all").map((s) => (
+                          <option key={s} value={s}>
+                            {s.replace("_", " ").charAt(0).toUpperCase() + s.slice(1).replace("_", " ")}
+                          </option>
+                        ))}
+                      </select>
+                    );
+                  })()}
                 </div>
 
-                <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-slate-50">
-                  <div className="text-center mb-4">
-                    <span className="px-3 py-1 bg-white text-sm text-slate-600 rounded-full border border-slate-200">
+                <div style={{ flex: 1, overflow: 'auto', padding: '16px', backgroundColor: '#0f1117' }}>
+                  <div style={{ textAlign: 'center', marginBottom: '16px' }}>
+                    <span
+                      style={{
+                        padding: '4px 12px',
+                        backgroundColor: '#27272a',
+                        fontSize: '12px',
+                        color: '#71717a',
+                        borderRadius: '20px',
+                      }}
+                    >
                       {selectedConversation.subject}
                     </span>
                   </div>
 
-                  {selectedConversation.messages?.map((message, index) => {
-                    const isAdmin = message.sender_type === "admin";
-                    return (
-                      <div key={message.id || index} className={`flex ${isAdmin ? "justify-end" : "justify-start"}`}>
-                        <div
-                          className={`max-w-[70%] rounded-2xl px-4 py-3 ${
-                            isAdmin
-                              ? "bg-blue-600 text-white rounded-br-md"
-                              : "bg-white text-slate-900 border border-slate-200 rounded-bl-md"
-                          }`}
-                        >
-                          <p className="text-sm whitespace-pre-wrap">{message.content}</p>
-                          <p className={`text-xs mt-1 ${isAdmin ? "text-blue-200" : "text-slate-400"}`}>
-                            {message.sender_name} - {formatDate(message.created_at)}
-                          </p>
+                  {isLoadingConversation ? (
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '32px' }}>
+                      <Loader2 size={24} style={{ color: '#3b82f6', animation: 'spin 1s linear infinite' }} />
+                    </div>
+                  ) : selectedConversation.messages && selectedConversation.messages.length > 0 ? (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                    {selectedConversation.messages.map((message, index) => {
+                      const isAdmin = message.sender_type === "admin";
+                      return (
+                        <div key={message.id || index} style={{ display: 'flex', justifyContent: isAdmin ? 'flex-end' : 'flex-start' }}>
+                          <div
+                            style={{
+                              maxWidth: '70%',
+                              borderRadius: '16px',
+                              borderBottomRightRadius: isAdmin ? '4px' : '16px',
+                              borderBottomLeftRadius: isAdmin ? '16px' : '4px',
+                              padding: '12px 16px',
+                              backgroundColor: isAdmin ? '#3b82f6' : '#27272a',
+                              color: isAdmin ? 'white' : '#fafafa',
+                            }}
+                          >
+                            <p style={{ fontSize: '13px', whiteSpace: 'pre-wrap', margin: 0 }}>{message.content}</p>
+                            <p
+                              style={{
+                                fontSize: '10px',
+                                marginTop: '4px',
+                                color: isAdmin ? '#93c5fd' : '#52525b',
+                                margin: '4px 0 0 0',
+                              }}
+                            >
+                              {message.sender_name} · {formatDate(message.created_at)}
+                            </p>
+                          </div>
                         </div>
-                      </div>
-                    );
-                  })}
+                      );
+                    })}
+                  </div>
+                  ) : (
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '32px' }}>
+                      <p style={{ fontSize: '13px', color: '#52525b' }}>No messages in this conversation</p>
+                    </div>
+                  )}
                   <div ref={messagesEndRef} />
                 </div>
 
-                <div className="p-4 border-t border-slate-100">
-                  <div className="flex items-center gap-3">
+                <div style={{ padding: '16px', borderTop: '1px solid #27272a' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                     <input
                       type="text"
                       value={newMessage}
                       onChange={(e) => setNewMessage(e.target.value)}
                       onKeyDown={(e) => e.key === "Enter" && !e.shiftKey && handleSendMessage()}
                       placeholder="Type your message..."
-                      className="flex-1 px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      style={{
+                        flex: 1,
+                        padding: '12px 16px',
+                        backgroundColor: '#0f1117',
+                        border: '1px solid #27272a',
+                        borderRadius: '10px',
+                        fontSize: '14px',
+                        color: '#fafafa',
+                        outline: 'none',
+                      }}
                     />
                     <button
                       onClick={handleSendMessage}
                       disabled={isSending || !newMessage.trim()}
-                      className="p-2.5 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                      style={{
+                        padding: '12px',
+                        backgroundColor: isSending || !newMessage.trim() ? 'rgba(59, 130, 246, 0.5)' : '#3b82f6',
+                        border: 'none',
+                        borderRadius: '10px',
+                        color: 'white',
+                        cursor: isSending || !newMessage.trim() ? 'not-allowed' : 'pointer',
+                      }}
                     >
-                      {isSending ? <Loader2 size={18} className="animate-spin" /> : <Send size={18} />}
+                      {isSending ? (
+                        <Loader2 size={16} style={{ animation: 'spin 1s linear infinite' }} />
+                      ) : (
+                        <Send size={16} />
+                      )}
                     </button>
                   </div>
                 </div>
               </>
             ) : (
-              <div className="flex-1 flex items-center justify-center bg-slate-50">
-                <div className="text-center">
-                  <MessageSquare size={48} className="mx-auto text-slate-300" />
-                  <p className="mt-4 font-medium text-slate-900">Select a conversation</p>
-                  <p className="text-sm text-slate-500 mt-1">Choose from the list to view messages</p>
+              <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: '#0f1117' }}>
+                <div style={{ textAlign: 'center' }}>
+                  <div style={{ fontSize: '40px', color: '#3f3f46', marginBottom: '16px' }}>💬</div>
+                  <p style={{ fontSize: '15px', fontWeight: 600, color: '#71717a', margin: 0 }}>Select a conversation</p>
+                  <p style={{ fontSize: '13px', color: '#52525b', margin: '4px 0 0 0' }}>Choose from the list to view messages</p>
                 </div>
               </div>
             )}
           </div>
         </div>
       </div>
+
+      <style>{`
+        @keyframes spin {
+          to { transform: rotate(360deg); }
+        }
+      `}</style>
     </div>
   );
 }

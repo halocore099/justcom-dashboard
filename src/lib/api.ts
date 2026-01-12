@@ -44,6 +44,8 @@ export interface OrderItem {
   quantity: number;
   unit_price: number;
   total_price: number;
+  article_number?: string;
+  product_number?: string;
 }
 
 export interface Order {
@@ -224,10 +226,14 @@ class ApiClient {
       if (!response.ok) return false;
 
       const data = await response.json();
-      const user = this.getUser();
-      if (data.access_token && user) {
-        this.setTokens(data.access_token, refreshToken, user);
-        return true;
+      // Use new refresh token from response (API uses token rotation)
+      // Also update user data if returned by API
+      if (data.access_token && data.refresh_token) {
+        const user = data.user || this.getUser();
+        if (user) {
+          this.setTokens(data.access_token, data.refresh_token, user);
+          return true;
+        }
       }
       return false;
     } catch {
@@ -255,10 +261,12 @@ class ApiClient {
   }
 
   // Products
-  async getProducts(params?: { category?: string; featured?: boolean }): Promise<Product[]> {
+  async getProducts(params?: { category?: string; featured?: boolean; all?: boolean }): Promise<Product[]> {
     const searchParams = new URLSearchParams();
     if (params?.category) searchParams.set("category", params.category);
     if (params?.featured) searchParams.set("featured", "true");
+    // Admin dashboard should see all products (including inactive)
+    searchParams.set("all", "true");
 
     const query = searchParams.toString();
     const endpoint = query ? `/products?${query}` : "/products";
@@ -272,21 +280,21 @@ class ApiClient {
   }
 
   async createProduct(data: Partial<Product>): Promise<Product> {
-    return this.request<Product>("/admin/products", {
+    return this.request<Product>("/products", {
       method: "POST",
       body: JSON.stringify(data),
     });
   }
 
   async updateProduct(id: string, data: Partial<Product>): Promise<Product> {
-    return this.request<Product>(`/admin/products/${id}`, {
+    return this.request<Product>(`/products/${id}`, {
       method: "PUT",
       body: JSON.stringify(data),
     });
   }
 
   async deleteProduct(id: string): Promise<void> {
-    return this.request<void>(`/admin/products/${id}`, {
+    return this.request<void>(`/products/${id}`, {
       method: "DELETE",
     });
   }
@@ -305,6 +313,17 @@ class ApiClient {
     return this.request<Order>(`/admin/orders/${id}/status`, {
       method: "PUT",
       body: JSON.stringify({ status }),
+    });
+  }
+
+  async updateOrderItem(
+    orderId: string,
+    itemId: string,
+    data: { article_number?: string; product_number?: string }
+  ): Promise<OrderItem> {
+    return this.request<OrderItem>(`/admin/orders/${orderId}/items/${itemId}`, {
+      method: "PUT",
+      body: JSON.stringify(data),
     });
   }
 

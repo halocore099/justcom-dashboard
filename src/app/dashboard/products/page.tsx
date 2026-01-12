@@ -10,11 +10,9 @@ import {
   Package,
   Star,
   X,
-  Loader2,
   RefreshCw,
   AlertCircle,
   Check,
-  ImageIcon,
 } from "lucide-react";
 import { api, Product } from "@/lib/api";
 
@@ -32,7 +30,6 @@ export default function ProductsPage() {
   const [isSaving, setIsSaving] = useState(false);
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
 
-  // Form state
   const [formData, setFormData] = useState({
     name: "",
     description: "",
@@ -176,29 +173,51 @@ export default function ProductsPage() {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center min-h-[60vh]">
-        <div className="flex flex-col items-center gap-4">
-          <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
-          <p className="text-slate-500">Loading products...</p>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '60vh' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '16px' }}>
+          <div
+            style={{
+              width: '32px',
+              height: '32px',
+              border: '3px solid #27272a',
+              borderTopColor: '#3b82f6',
+              borderRadius: '50%',
+              animation: 'spin 1s linear infinite',
+            }}
+          />
+          <p style={{ color: '#71717a', fontSize: '14px', margin: 0 }}>Loading products...</p>
         </div>
+        <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
       </div>
     );
   }
 
   return (
-    <div className="space-y-6">
+    <div>
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '32px' }}>
         <div>
-          <h1 className="text-2xl font-bold text-slate-900">Products</h1>
-          <p className="text-slate-500 mt-1">Manage your product inventory</p>
+          <div style={{ fontSize: '11px', fontWeight: 600, letterSpacing: '1px', color: '#71717a', marginBottom: '4px', textTransform: 'uppercase' }}>
+            Inventory
+          </div>
+          <h1 style={{ fontSize: '28px', fontWeight: 600, color: '#fafafa', margin: 0 }}>Products</h1>
         </div>
-        <div className="flex items-center gap-3">
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
           <button
             onClick={fetchProducts}
-            className="p-2 text-slate-600 bg-white border border-slate-200 rounded-xl hover:bg-slate-50 transition-colors"
+            style={{
+              padding: '10px',
+              backgroundColor: '#27272a',
+              border: '1px solid #3f3f46',
+              borderRadius: '10px',
+              color: '#a1a1aa',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
           >
-            <RefreshCw size={18} />
+            <RefreshCw size={16} />
           </button>
           <button
             onClick={() => {
@@ -206,66 +225,115 @@ export default function ProductsPage() {
               setEditingProduct(null);
               setShowAddModal(true);
             }}
-            className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-xl font-medium hover:from-blue-700 hover:to-blue-800 transition-all shadow-lg shadow-blue-500/25"
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '8px',
+              padding: '10px 16px',
+              backgroundColor: '#3b82f6',
+              border: 'none',
+              borderRadius: '10px',
+              color: 'white',
+              fontSize: '13px',
+              fontWeight: 500,
+              cursor: 'pointer',
+            }}
           >
-            <Plus size={18} />
+            <Plus size={16} />
             Add Product
           </button>
         </div>
-      </div>
+      </header>
 
       {error && (
-        <div className="p-4 bg-red-50 border border-red-200 rounded-xl text-red-600 text-sm flex items-center gap-3">
-          <AlertCircle size={18} />
+        <div
+          style={{
+            padding: '16px',
+            backgroundColor: 'rgba(239, 68, 68, 0.1)',
+            border: '1px solid rgba(239, 68, 68, 0.2)',
+            borderRadius: '10px',
+            color: '#ef4444',
+            fontSize: '13px',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '12px',
+            marginBottom: '24px',
+          }}
+        >
+          <AlertCircle size={16} />
           {error}
-          <button onClick={() => setError(null)} className="ml-auto">
-            <X size={18} />
+          <button onClick={() => setError(null)} style={{ marginLeft: 'auto', background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer' }}>
+            <X size={16} />
           </button>
         </div>
       )}
 
       {/* Stats */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="bg-white rounded-2xl border border-slate-200 p-5">
-          <p className="text-sm font-medium text-slate-500">Total Products</p>
-          <p className="text-3xl font-bold text-slate-900 mt-1">{stats.total}</p>
-        </div>
-        <div className="bg-white rounded-2xl border border-slate-200 p-5">
-          <p className="text-sm font-medium text-slate-500">Active</p>
-          <p className="text-3xl font-bold text-emerald-600 mt-1">{stats.active}</p>
-        </div>
-        <div className="bg-white rounded-2xl border border-slate-200 p-5">
-          <p className="text-sm font-medium text-slate-500">Low Stock</p>
-          <p className="text-3xl font-bold text-amber-600 mt-1">{stats.lowStock}</p>
-        </div>
-        <div className="bg-white rounded-2xl border border-slate-200 p-5">
-          <p className="text-sm font-medium text-slate-500">Out of Stock</p>
-          <p className="text-3xl font-bold text-red-600 mt-1">{stats.outOfStock}</p>
-        </div>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '16px', marginBottom: '24px' }}>
+        {[
+          { label: 'Total Products', value: stats.total, color: '#fafafa' },
+          { label: 'Active', value: stats.active, color: '#10b981' },
+          { label: 'Low Stock', value: stats.lowStock, color: '#f59e0b' },
+          { label: 'Out of Stock', value: stats.outOfStock, color: '#ef4444' },
+        ].map((stat, idx) => (
+          <div
+            key={idx}
+            style={{
+              backgroundColor: '#16181d',
+              border: '1px solid #27272a',
+              borderRadius: '12px',
+              padding: '20px',
+            }}
+          >
+            <p style={{ fontSize: '12px', color: '#71717a', margin: 0 }}>{stat.label}</p>
+            <p style={{ fontSize: '24px', fontWeight: 600, color: stat.color, fontFamily: '"JetBrains Mono", monospace', margin: '4px 0 0 0' }}>
+              {stat.value}
+            </p>
+          </div>
+        ))}
       </div>
 
       {/* Filters */}
-      <div className="flex flex-col sm:flex-row gap-4">
-        <div className="relative flex-1">
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+      <div style={{ display: 'flex', gap: '16px', marginBottom: '24px' }}>
+        <div style={{ position: 'relative', flex: 1 }}>
+          <Search size={16} style={{ position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)', color: '#52525b' }} />
           <input
             type="text"
             placeholder="Search products..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-11 pr-4 py-3 bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+            style={{
+              width: '100%',
+              paddingLeft: '44px',
+              paddingRight: '16px',
+              paddingTop: '12px',
+              paddingBottom: '12px',
+              backgroundColor: '#16181d',
+              border: '1px solid #27272a',
+              borderRadius: '10px',
+              color: '#fafafa',
+              fontSize: '14px',
+              outline: 'none',
+            }}
           />
         </div>
-        <div className="flex gap-2 overflow-x-auto pb-2 sm:pb-0">
+        <div style={{ display: 'flex', gap: '8px' }}>
           {categories.map((category) => (
             <button
               key={category}
               onClick={() => setSelectedCategory(category)}
-              className={`px-4 py-2.5 rounded-xl text-sm font-medium whitespace-nowrap transition-all ${
-                selectedCategory === category
-                  ? "bg-gradient-to-r from-blue-600 to-blue-700 text-white shadow-lg shadow-blue-500/25"
-                  : "bg-white border border-slate-200 text-slate-600 hover:bg-slate-50"
-              }`}
+              style={{
+                padding: '10px 16px',
+                borderRadius: '10px',
+                fontSize: '13px',
+                fontWeight: 500,
+                whiteSpace: 'nowrap',
+                cursor: 'pointer',
+                border: 'none',
+                backgroundColor: selectedCategory === category ? '#3b82f6' : '#27272a',
+                color: selectedCategory === category ? 'white' : '#a1a1aa',
+                transition: 'all 0.2s ease',
+              }}
             >
               {category}
             </button>
@@ -275,92 +343,139 @@ export default function ProductsPage() {
 
       {/* Products Grid */}
       {filteredProducts.length > 0 ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '20px' }}>
           {filteredProducts.map((product) => (
             <div
               key={product.id}
-              className="bg-white rounded-2xl border border-slate-200 overflow-hidden hover:shadow-lg hover:shadow-slate-200/50 transition-all duration-300"
+              style={{
+                backgroundColor: '#16181d',
+                border: '1px solid #27272a',
+                borderRadius: '16px',
+                overflow: 'hidden',
+              }}
             >
               {/* Product Image */}
-              <div className="aspect-video bg-gradient-to-br from-slate-100 to-slate-50 relative flex items-center justify-center">
+              <div
+                style={{
+                  aspectRatio: '16/9',
+                  backgroundColor: '#1c1e24',
+                  position: 'relative',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}
+              >
                 {product.image_url ? (
-                  <img
-                    src={product.image_url}
-                    alt={product.name}
-                    className="w-full h-full object-cover"
-                  />
+                  <img src={product.image_url} alt={product.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                 ) : (
-                  <Package size={48} className="text-slate-300" />
+                  <Package size={40} style={{ color: '#3f3f46' }} />
                 )}
                 {product.is_featured && (
-                  <span className="absolute top-3 left-3 px-2 py-1 bg-amber-500 text-white text-xs font-semibold rounded-lg">
+                  <span
+                    style={{
+                      position: 'absolute',
+                      top: '12px',
+                      left: '12px',
+                      padding: '4px 8px',
+                      backgroundColor: '#f59e0b',
+                      color: 'white',
+                      fontSize: '11px',
+                      fontWeight: 600,
+                      borderRadius: '4px',
+                    }}
+                  >
                     Featured
                   </span>
                 )}
                 {!product.is_active && (
-                  <span className="absolute top-3 right-3 px-2 py-1 bg-slate-500 text-white text-xs font-semibold rounded-lg">
+                  <span
+                    style={{
+                      position: 'absolute',
+                      top: '12px',
+                      right: '12px',
+                      padding: '4px 8px',
+                      backgroundColor: '#52525b',
+                      color: 'white',
+                      fontSize: '11px',
+                      fontWeight: 600,
+                      borderRadius: '4px',
+                    }}
+                  >
                     Inactive
                   </span>
                 )}
               </div>
 
               {/* Product Info */}
-              <div className="p-5">
-                <div className="flex items-start justify-between gap-2">
+              <div style={{ padding: '20px' }}>
+                <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '8px' }}>
                   <div>
-                    <span className="text-xs font-medium text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full">
+                    <span
+                      style={{
+                        fontSize: '11px',
+                        fontWeight: 500,
+                        color: '#3b82f6',
+                        backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                        padding: '2px 8px',
+                        borderRadius: '4px',
+                      }}
+                    >
                       {product.category}
                     </span>
-                    <h3 className="font-semibold text-slate-900 mt-2">{product.name}</h3>
+                    <h3 style={{ fontWeight: 600, color: '#fafafa', marginTop: '8px', fontSize: '14px' }}>{product.name}</h3>
                   </div>
-                  <div className="flex items-center gap-1">
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
                     <button
                       onClick={() => openEditModal(product)}
-                      className="p-2 hover:bg-slate-100 rounded-lg transition-colors"
+                      style={{ padding: '8px', background: 'none', border: 'none', cursor: 'pointer', borderRadius: '8px' }}
                     >
-                      <Edit size={16} className="text-slate-500" />
+                      <Edit size={14} style={{ color: '#71717a' }} />
                     </button>
                     <button
                       onClick={() => setDeleteConfirm(product.id)}
-                      className="p-2 hover:bg-red-50 rounded-lg transition-colors"
+                      style={{ padding: '8px', background: 'none', border: 'none', cursor: 'pointer', borderRadius: '8px' }}
                     >
-                      <Trash2 size={16} className="text-slate-500 hover:text-red-500" />
+                      <Trash2 size={14} style={{ color: '#71717a' }} />
                     </button>
                   </div>
                 </div>
 
                 {/* Condition */}
-                <div className="flex items-center gap-2 mt-3">
-                  <div className="flex items-center gap-0.5">
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '12px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '2px' }}>
                     {[...Array(5)].map((_, i) => (
                       <Star
                         key={i}
-                        size={14}
-                        className={i < product.health_rating ? "text-amber-400 fill-amber-400" : "text-slate-200"}
+                        size={12}
+                        style={{ color: i < product.health_rating ? '#f59e0b' : '#3f3f46' }}
+                        fill={i < product.health_rating ? '#f59e0b' : 'none'}
                       />
                     ))}
                   </div>
-                  <span className="text-xs text-slate-500">{getHealthLabel(product.health_rating)}</span>
+                  <span style={{ fontSize: '11px', color: '#71717a' }}>{getHealthLabel(product.health_rating)}</span>
                 </div>
 
                 {/* Price & Stock */}
-                <div className="flex items-end justify-between mt-4">
+                <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', marginTop: '16px' }}>
                   <div>
-                    <p className="text-2xl font-bold text-slate-900">{product.price.toFixed(2)}</p>
+                    <p style={{ fontSize: '20px', fontWeight: 700, color: '#fafafa', fontFamily: '"JetBrains Mono", monospace', margin: 0 }}>
+                      €{product.price.toFixed(2)}
+                    </p>
                     {product.original_price && product.original_price > product.price && (
-                      <p className="text-sm text-slate-400 line-through">
-                        {product.original_price.toFixed(2)}
+                      <p style={{ fontSize: '12px', color: '#52525b', textDecoration: 'line-through', fontFamily: '"JetBrains Mono", monospace', margin: '2px 0 0 0' }}>
+                        €{product.original_price.toFixed(2)}
                       </p>
                     )}
                   </div>
                   <div
-                    className={`px-3 py-1.5 rounded-lg text-sm font-medium ${
-                      product.stock_count === 0
-                        ? "bg-red-50 text-red-700"
-                        : product.stock_count < 5
-                        ? "bg-amber-50 text-amber-700"
-                        : "bg-emerald-50 text-emerald-700"
-                    }`}
+                    style={{
+                      padding: '4px 10px',
+                      borderRadius: '6px',
+                      fontSize: '11px',
+                      fontWeight: 500,
+                      backgroundColor: product.stock_count === 0 ? 'rgba(239, 68, 68, 0.1)' : product.stock_count < 5 ? 'rgba(245, 158, 11, 0.1)' : 'rgba(16, 185, 129, 0.1)',
+                      color: product.stock_count === 0 ? '#ef4444' : product.stock_count < 5 ? '#f59e0b' : '#10b981',
+                    }}
                   >
                     {product.stock_count === 0 ? "Out of stock" : `${product.stock_count} in stock`}
                   </div>
@@ -370,10 +485,18 @@ export default function ProductsPage() {
           ))}
         </div>
       ) : (
-        <div className="bg-white rounded-2xl border border-slate-200 p-12 text-center">
-          <Package size={48} className="mx-auto text-slate-300" />
-          <p className="mt-4 font-medium text-slate-900">No products found</p>
-          <p className="text-sm text-slate-500 mt-1">
+        <div
+          style={{
+            backgroundColor: '#16181d',
+            border: '1px solid #27272a',
+            borderRadius: '16px',
+            padding: '48px 24px',
+            textAlign: 'center',
+          }}
+        >
+          <Package size={32} style={{ color: '#3f3f46', marginBottom: '16px' }} />
+          <p style={{ fontSize: '15px', fontWeight: 600, color: '#71717a', margin: 0 }}>No products found</p>
+          <p style={{ fontSize: '13px', color: '#52525b', marginTop: '4px' }}>
             {searchQuery ? "Try adjusting your search" : "Add your first product to get started"}
           </p>
         </div>
@@ -381,10 +504,43 @@ export default function ProductsPage() {
 
       {/* Add/Edit Product Modal */}
       {showAddModal && (
-        <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
-            <div className="sticky top-0 bg-white px-6 py-4 border-b border-slate-100 flex items-center justify-between">
-              <h2 className="text-xl font-semibold text-slate-900">
+        <div
+          style={{
+            position: 'fixed',
+            inset: 0,
+            backgroundColor: 'rgba(0,0,0,0.6)',
+            backdropFilter: 'blur(4px)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 50,
+            padding: '16px',
+          }}
+        >
+          <div
+            style={{
+              backgroundColor: '#16181d',
+              border: '1px solid #27272a',
+              borderRadius: '16px',
+              width: '100%',
+              maxWidth: '560px',
+              maxHeight: '90vh',
+              overflowY: 'auto',
+            }}
+          >
+            <div
+              style={{
+                position: 'sticky',
+                top: 0,
+                backgroundColor: '#16181d',
+                padding: '20px 24px',
+                borderBottom: '1px solid #27272a',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+              }}
+            >
+              <h2 style={{ fontSize: '18px', fontWeight: 600, color: '#fafafa', margin: 0 }}>
                 {editingProduct ? "Edit Product" : "Add New Product"}
               </h2>
               <button
@@ -393,173 +549,261 @@ export default function ProductsPage() {
                   setEditingProduct(null);
                   resetForm();
                 }}
-                className="p-2 hover:bg-slate-100 rounded-lg transition-colors"
+                style={{ padding: '8px', background: 'none', border: 'none', cursor: 'pointer', borderRadius: '8px' }}
               >
-                <X size={20} />
+                <X size={18} style={{ color: '#71717a' }} />
               </button>
             </div>
 
-            <div className="p-6 space-y-5">
+            <div style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '20px' }}>
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-2">Product Name *</label>
+                <label style={{ display: 'block', fontSize: '13px', fontWeight: 500, color: '#a1a1aa', marginBottom: '8px' }}>Product Name *</label>
                 <input
                   type="text"
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  className="w-full px-4 py-2.5 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
                   placeholder="iPhone 15 Pro"
+                  style={{
+                    width: '100%',
+                    padding: '12px 16px',
+                    backgroundColor: '#0f1117',
+                    border: '1px solid #27272a',
+                    borderRadius: '10px',
+                    color: '#fafafa',
+                    fontSize: '14px',
+                    outline: 'none',
+                  }}
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-2">Description</label>
+                <label style={{ display: 'block', fontSize: '13px', fontWeight: 500, color: '#a1a1aa', marginBottom: '8px' }}>Description</label>
                 <textarea
                   value={formData.description}
                   onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                  className="w-full px-4 py-2.5 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
-                  rows={3}
                   placeholder="Product description..."
+                  rows={3}
+                  style={{
+                    width: '100%',
+                    padding: '12px 16px',
+                    backgroundColor: '#0f1117',
+                    border: '1px solid #27272a',
+                    borderRadius: '10px',
+                    color: '#fafafa',
+                    fontSize: '14px',
+                    outline: 'none',
+                    resize: 'none',
+                  }}
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-2">Price *</label>
+                  <label style={{ display: 'block', fontSize: '13px', fontWeight: 500, color: '#a1a1aa', marginBottom: '8px' }}>Price *</label>
                   <input
                     type="number"
                     step="0.01"
                     value={formData.price}
                     onChange={(e) => setFormData({ ...formData, price: e.target.value })}
-                    className="w-full px-4 py-2.5 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
                     placeholder="999.00"
+                    style={{
+                      width: '100%',
+                      padding: '12px 16px',
+                      backgroundColor: '#0f1117',
+                      border: '1px solid #27272a',
+                      borderRadius: '10px',
+                      color: '#fafafa',
+                      fontSize: '14px',
+                      outline: 'none',
+                    }}
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-2">Original Price</label>
+                  <label style={{ display: 'block', fontSize: '13px', fontWeight: 500, color: '#a1a1aa', marginBottom: '8px' }}>Original Price</label>
                   <input
                     type="number"
                     step="0.01"
                     value={formData.original_price}
                     onChange={(e) => setFormData({ ...formData, original_price: e.target.value })}
-                    className="w-full px-4 py-2.5 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
                     placeholder="1199.00"
+                    style={{
+                      width: '100%',
+                      padding: '12px 16px',
+                      backgroundColor: '#0f1117',
+                      border: '1px solid #27272a',
+                      borderRadius: '10px',
+                      color: '#fafafa',
+                      fontSize: '14px',
+                      outline: 'none',
+                    }}
                   />
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-2">Category *</label>
+                  <label style={{ display: 'block', fontSize: '13px', fontWeight: 500, color: '#a1a1aa', marginBottom: '8px' }}>Category *</label>
                   <select
                     value={formData.category}
                     onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-                    className="w-full px-4 py-2.5 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    style={{
+                      width: '100%',
+                      padding: '12px 16px',
+                      backgroundColor: '#0f1117',
+                      border: '1px solid #27272a',
+                      borderRadius: '10px',
+                      color: '#fafafa',
+                      fontSize: '14px',
+                      outline: 'none',
+                    }}
                   >
                     {categories.slice(1).map((cat) => (
-                      <option key={cat} value={cat}>
-                        {cat}
-                      </option>
+                      <option key={cat} value={cat}>{cat}</option>
                     ))}
                   </select>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-2">Stock Count *</label>
+                  <label style={{ display: 'block', fontSize: '13px', fontWeight: 500, color: '#a1a1aa', marginBottom: '8px' }}>Stock Count *</label>
                   <input
                     type="number"
                     value={formData.stock_count}
                     onChange={(e) => setFormData({ ...formData, stock_count: e.target.value })}
-                    className="w-full px-4 py-2.5 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
                     placeholder="10"
+                    style={{
+                      width: '100%',
+                      padding: '12px 16px',
+                      backgroundColor: '#0f1117',
+                      border: '1px solid #27272a',
+                      borderRadius: '10px',
+                      color: '#fafafa',
+                      fontSize: '14px',
+                      outline: 'none',
+                    }}
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-2">
-                  Condition (Health Rating)
-                </label>
-                <div className="flex items-center gap-2">
+                <label style={{ display: 'block', fontSize: '13px', fontWeight: 500, color: '#a1a1aa', marginBottom: '8px' }}>Condition</label>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px', backgroundColor: '#0f1117', borderRadius: '10px', border: '1px solid #27272a' }}>
                   {[1, 2, 3, 4, 5].map((rating) => (
                     <button
                       key={rating}
                       type="button"
                       onClick={() => setFormData({ ...formData, health_rating: rating })}
-                      className="p-1"
+                      style={{ padding: '6px', background: 'none', border: 'none', cursor: 'pointer', borderRadius: '4px' }}
                     >
                       <Star
-                        size={24}
-                        className={`${
-                          rating <= formData.health_rating
-                            ? "text-amber-400 fill-amber-400"
-                            : "text-slate-200"
-                        } transition-colors`}
+                        size={20}
+                        style={{ color: rating <= formData.health_rating ? '#f59e0b' : '#3f3f46', transition: 'color 0.2s' }}
+                        fill={rating <= formData.health_rating ? '#f59e0b' : 'none'}
                       />
                     </button>
                   ))}
-                  <span className="ml-2 text-sm text-slate-500">
-                    {getHealthLabel(formData.health_rating)}
-                  </span>
+                  <span style={{ marginLeft: '12px', fontSize: '13px', color: '#71717a' }}>{getHealthLabel(formData.health_rating)}</span>
                 </div>
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-2">Image URL</label>
+                <label style={{ display: 'block', fontSize: '13px', fontWeight: 500, color: '#a1a1aa', marginBottom: '8px' }}>Image URL</label>
                 <input
                   type="url"
                   value={formData.image_url}
                   onChange={(e) => setFormData({ ...formData, image_url: e.target.value })}
-                  className="w-full px-4 py-2.5 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
                   placeholder="https://..."
+                  style={{
+                    width: '100%',
+                    padding: '12px 16px',
+                    backgroundColor: '#0f1117',
+                    border: '1px solid #27272a',
+                    borderRadius: '10px',
+                    color: '#fafafa',
+                    fontSize: '14px',
+                    outline: 'none',
+                  }}
                 />
               </div>
 
-              <div className="flex items-center gap-6">
-                <label className="flex items-center gap-2 cursor-pointer">
+              <div style={{ display: 'flex', alignItems: 'center', gap: '24px', padding: '16px', backgroundColor: '#0f1117', borderRadius: '10px', border: '1px solid #27272a' }}>
+                <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
                   <input
                     type="checkbox"
                     checked={formData.is_featured}
                     onChange={(e) => setFormData({ ...formData, is_featured: e.target.checked })}
-                    className="w-4 h-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500"
+                    style={{ width: '16px', height: '16px' }}
                   />
-                  <span className="text-sm text-slate-700">Featured</span>
+                  <span style={{ fontSize: '13px', color: '#a1a1aa' }}>Featured</span>
                 </label>
-                <label className="flex items-center gap-2 cursor-pointer">
+                <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
                   <input
                     type="checkbox"
                     checked={formData.is_active}
                     onChange={(e) => setFormData({ ...formData, is_active: e.target.checked })}
-                    className="w-4 h-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500"
+                    style={{ width: '16px', height: '16px' }}
                   />
-                  <span className="text-sm text-slate-700">Active</span>
+                  <span style={{ fontSize: '13px', color: '#a1a1aa' }}>Active</span>
                 </label>
               </div>
             </div>
 
-            <div className="sticky bottom-0 bg-white px-6 py-4 border-t border-slate-100 flex justify-end gap-3">
+            <div
+              style={{
+                position: 'sticky',
+                bottom: 0,
+                backgroundColor: '#16181d',
+                padding: '16px 24px',
+                borderTop: '1px solid #27272a',
+                display: 'flex',
+                justifyContent: 'flex-end',
+                gap: '12px',
+              }}
+            >
               <button
                 onClick={() => {
                   setShowAddModal(false);
                   setEditingProduct(null);
                   resetForm();
                 }}
-                className="px-4 py-2.5 border border-slate-200 text-slate-700 rounded-xl hover:bg-slate-50 transition-colors font-medium"
+                style={{
+                  padding: '10px 16px',
+                  backgroundColor: '#27272a',
+                  border: 'none',
+                  borderRadius: '10px',
+                  color: '#a1a1aa',
+                  fontSize: '13px',
+                  fontWeight: 500,
+                  cursor: 'pointer',
+                }}
               >
                 Cancel
               </button>
               <button
                 onClick={handleSave}
                 disabled={isSaving || !formData.name || !formData.price}
-                className="px-6 py-2.5 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-xl hover:from-blue-700 hover:to-blue-800 transition-all font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                  padding: '10px 20px',
+                  backgroundColor: '#3b82f6',
+                  border: 'none',
+                  borderRadius: '10px',
+                  color: 'white',
+                  fontSize: '13px',
+                  fontWeight: 500,
+                  cursor: isSaving || !formData.name || !formData.price ? 'not-allowed' : 'pointer',
+                  opacity: isSaving || !formData.name || !formData.price ? 0.5 : 1,
+                }}
               >
                 {isSaving ? (
                   <>
-                    <Loader2 size={18} className="animate-spin" />
+                    <div style={{ width: '14px', height: '14px', border: '2px solid white', borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 1s linear infinite' }} />
                     Saving...
                   </>
                 ) : (
                   <>
-                    <Check size={18} />
-                    {editingProduct ? "Update" : "Create"} Product
+                    <Check size={14} />
+                    {editingProduct ? "Update" : "Create"}
                   </>
                 )}
               </button>
@@ -570,25 +814,76 @@ export default function ProductsPage() {
 
       {/* Delete Confirmation Modal */}
       {deleteConfirm && (
-        <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl w-full max-w-sm p-6 text-center">
-            <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <Trash2 size={24} className="text-red-600" />
+        <div
+          style={{
+            position: 'fixed',
+            inset: 0,
+            backgroundColor: 'rgba(0,0,0,0.6)',
+            backdropFilter: 'blur(4px)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 50,
+            padding: '16px',
+          }}
+        >
+          <div
+            style={{
+              backgroundColor: '#16181d',
+              border: '1px solid #27272a',
+              borderRadius: '16px',
+              width: '100%',
+              maxWidth: '384px',
+              padding: '24px',
+              textAlign: 'center',
+            }}
+          >
+            <div
+              style={{
+                width: '48px',
+                height: '48px',
+                backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                borderRadius: '12px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                margin: '0 auto 16px',
+              }}
+            >
+              <Trash2 size={22} style={{ color: '#ef4444' }} />
             </div>
-            <h3 className="text-lg font-semibold text-slate-900">Delete Product?</h3>
-            <p className="text-slate-500 mt-2">
-              This action cannot be undone. The product will be permanently removed.
-            </p>
-            <div className="flex gap-3 mt-6">
+            <h3 style={{ fontSize: '16px', fontWeight: 600, color: '#fafafa', margin: 0 }}>Delete Product?</h3>
+            <p style={{ fontSize: '13px', color: '#71717a', marginTop: '8px' }}>This action cannot be undone.</p>
+            <div style={{ display: 'flex', gap: '12px', marginTop: '24px' }}>
               <button
                 onClick={() => setDeleteConfirm(null)}
-                className="flex-1 px-4 py-2.5 border border-slate-200 text-slate-700 rounded-xl hover:bg-slate-50 transition-colors font-medium"
+                style={{
+                  flex: 1,
+                  padding: '10px 16px',
+                  backgroundColor: '#27272a',
+                  border: 'none',
+                  borderRadius: '10px',
+                  color: '#a1a1aa',
+                  fontSize: '13px',
+                  fontWeight: 500,
+                  cursor: 'pointer',
+                }}
               >
                 Cancel
               </button>
               <button
                 onClick={() => handleDelete(deleteConfirm)}
-                className="flex-1 px-4 py-2.5 bg-red-600 text-white rounded-xl hover:bg-red-700 transition-colors font-medium"
+                style={{
+                  flex: 1,
+                  padding: '10px 16px',
+                  backgroundColor: '#ef4444',
+                  border: 'none',
+                  borderRadius: '10px',
+                  color: 'white',
+                  fontSize: '13px',
+                  fontWeight: 500,
+                  cursor: 'pointer',
+                }}
               >
                 Delete
               </button>
@@ -596,6 +891,8 @@ export default function ProductsPage() {
           </div>
         </div>
       )}
+
+      <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
     </div>
   );
 }

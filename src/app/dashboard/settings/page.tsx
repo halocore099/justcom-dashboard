@@ -14,29 +14,41 @@ export default function SettingsPage() {
   ];
 
   return (
-    <div className="space-y-6">
+    <div>
       {/* Header */}
-      <div>
-        <h1 className="text-2xl font-bold text-gray-900">Settings</h1>
-        <p className="text-gray-500 mt-1">Manage your account and store settings</p>
+      <div style={{ marginBottom: '32px' }}>
+        <p style={{ fontSize: '11px', fontWeight: 600, letterSpacing: '0.1em', color: '#71717a', textTransform: 'uppercase', margin: 0 }}>
+          Configuration
+        </p>
+        <h1 style={{ fontSize: '28px', fontWeight: 600, color: '#fafafa', margin: '4px 0 0 0' }}>Settings</h1>
       </div>
 
-      <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
-        <div className="grid grid-cols-1 lg:grid-cols-4">
+      <div style={{ backgroundColor: '#16181d', border: '1px solid #27272a', borderRadius: '16px', overflow: 'hidden' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 3fr' }}>
           {/* Sidebar */}
-          <div className="border-b lg:border-b-0 lg:border-r border-gray-200 p-4">
-            <nav className="space-y-1">
+          <div style={{ padding: '20px', borderRight: '1px solid #27272a' }}>
+            <nav style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
               {tabs.map((tab) => (
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
-                  className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium transition-colors ${
-                    activeTab === tab.id
-                      ? "bg-blue-50 text-blue-700"
-                      : "text-gray-700 hover:bg-gray-50"
-                  }`}
+                  style={{
+                    width: '100%',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '12px',
+                    padding: '10px 16px',
+                    borderRadius: '10px',
+                    fontSize: '13px',
+                    fontWeight: 500,
+                    border: 'none',
+                    cursor: 'pointer',
+                    backgroundColor: activeTab === tab.id ? 'rgba(59, 130, 246, 0.1)' : 'transparent',
+                    color: activeTab === tab.id ? '#3b82f6' : '#a1a1aa',
+                    textAlign: 'left',
+                  }}
                 >
-                  <tab.icon size={18} />
+                  <tab.icon size={16} />
                   {tab.label}
                 </button>
               ))}
@@ -44,92 +56,193 @@ export default function SettingsPage() {
           </div>
 
           {/* Content */}
-          <div className="lg:col-span-3 p-6">
+          <div style={{ padding: '28px' }}>
             {activeTab === "profile" && (
-              <div className="space-y-6">
-                <h2 className="text-lg font-semibold">Profile Settings</h2>
+              <div>
+                <h2 style={{ fontSize: '16px', fontWeight: 600, color: '#fafafa', margin: '0 0 24px 0' }}>Profile Settings</h2>
 
-                <div className="flex items-center gap-6">
-                  <div className="w-20 h-20 bg-gray-200 rounded-full flex items-center justify-center text-2xl font-semibold text-gray-500">
+                <div style={{ display: 'flex', alignItems: 'center', gap: '24px', marginBottom: '24px' }}>
+                  <div
+                    style={{
+                      width: '64px',
+                      height: '64px',
+                      backgroundColor: '#6366f1',
+                      borderRadius: '12px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      fontSize: '20px',
+                      fontWeight: 600,
+                      color: 'white',
+                    }}
+                  >
                     AD
                   </div>
-                  <div>
-                    <button className="px-4 py-2 border border-gray-200 rounded-lg text-sm font-medium hover:bg-gray-50 transition-colors">
-                      Change Avatar
-                    </button>
-                  </div>
+                  <button
+                    style={{
+                      padding: '8px 16px',
+                      backgroundColor: '#27272a',
+                      border: '1px solid #3f3f46',
+                      borderRadius: '10px',
+                      fontSize: '13px',
+                      fontWeight: 500,
+                      color: '#a1a1aa',
+                      cursor: 'pointer',
+                    }}
+                  >
+                    Change Avatar
+                  </button>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', marginBottom: '24px' }}>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <label style={{ display: 'block', fontSize: '13px', fontWeight: 500, color: '#a1a1aa', marginBottom: '8px' }}>
                       Full Name
                     </label>
                     <input
                       type="text"
                       defaultValue="Admin User"
-                      className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      style={{
+                        width: '100%',
+                        padding: '12px 16px',
+                        backgroundColor: '#0f1117',
+                        border: '1px solid #27272a',
+                        borderRadius: '10px',
+                        color: '#fafafa',
+                        fontSize: '14px',
+                        outline: 'none',
+                      }}
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <label style={{ display: 'block', fontSize: '13px', fontWeight: 500, color: '#a1a1aa', marginBottom: '8px' }}>
                       Email
                     </label>
                     <input
                       type="email"
                       defaultValue="admin@justcom.de"
-                      className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      style={{
+                        width: '100%',
+                        padding: '12px 16px',
+                        backgroundColor: '#0f1117',
+                        border: '1px solid #27272a',
+                        borderRadius: '10px',
+                        color: '#fafafa',
+                        fontSize: '14px',
+                        outline: 'none',
+                      }}
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <label style={{ display: 'block', fontSize: '13px', fontWeight: 500, color: '#a1a1aa', marginBottom: '8px' }}>
                       Phone
                     </label>
                     <input
                       type="tel"
                       defaultValue="+49 123 456 7890"
-                      className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      style={{
+                        width: '100%',
+                        padding: '12px 16px',
+                        backgroundColor: '#0f1117',
+                        border: '1px solid #27272a',
+                        borderRadius: '10px',
+                        color: '#fafafa',
+                        fontSize: '14px',
+                        outline: 'none',
+                      }}
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <label style={{ display: 'block', fontSize: '13px', fontWeight: 500, color: '#a1a1aa', marginBottom: '8px' }}>
                       Role
                     </label>
                     <input
                       type="text"
                       defaultValue="Administrator"
                       disabled
-                      className="w-full px-4 py-2 border border-gray-200 rounded-lg bg-gray-50 text-gray-500"
+                      style={{
+                        width: '100%',
+                        padding: '12px 16px',
+                        backgroundColor: '#0f1117',
+                        border: '1px solid #27272a',
+                        borderRadius: '10px',
+                        color: '#52525b',
+                        fontSize: '14px',
+                        outline: 'none',
+                      }}
                     />
                   </div>
                 </div>
 
-                <button className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors">
-                  <Save size={18} />
+                <button
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '8px',
+                    padding: '10px 16px',
+                    backgroundColor: '#3b82f6',
+                    border: 'none',
+                    borderRadius: '10px',
+                    fontSize: '13px',
+                    fontWeight: 500,
+                    color: 'white',
+                    cursor: 'pointer',
+                  }}
+                >
+                  <Save size={14} />
                   Save Changes
                 </button>
               </div>
             )}
 
             {activeTab === "notifications" && (
-              <div className="space-y-6">
-                <h2 className="text-lg font-semibold">Notification Preferences</h2>
+              <div>
+                <h2 style={{ fontSize: '16px', fontWeight: 600, color: '#fafafa', margin: '0 0 24px 0' }}>Notification Preferences</h2>
 
-                <div className="space-y-4">
+                <div>
                   {[
                     { id: "orders", label: "New Orders", desc: "Get notified when a new order is placed" },
                     { id: "messages", label: "Customer Messages", desc: "Get notified when customers send messages" },
                     { id: "stock", label: "Low Stock Alerts", desc: "Get notified when products are running low" },
                     { id: "reviews", label: "Product Reviews", desc: "Get notified when customers leave reviews" },
-                  ].map((item) => (
-                    <div key={item.id} className="flex items-center justify-between py-3 border-b border-gray-100">
+                  ].map((item, index, arr) => (
+                    <div
+                      key={item.id}
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        padding: '16px 0',
+                        borderBottom: index < arr.length - 1 ? '1px solid #27272a' : 'none',
+                      }}
+                    >
                       <div>
-                        <p className="font-medium text-gray-900">{item.label}</p>
-                        <p className="text-sm text-gray-500">{item.desc}</p>
+                        <p style={{ fontWeight: 500, color: '#fafafa', fontSize: '14px', margin: 0 }}>{item.label}</p>
+                        <p style={{ fontSize: '12px', color: '#52525b', margin: '2px 0 0 0' }}>{item.desc}</p>
                       </div>
-                      <label className="relative inline-flex items-center cursor-pointer">
-                        <input type="checkbox" defaultChecked className="sr-only peer" />
-                        <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                      <label style={{ position: 'relative', display: 'inline-flex', alignItems: 'center', cursor: 'pointer' }}>
+                        <input type="checkbox" defaultChecked style={{ position: 'absolute', width: 1, height: 1, overflow: 'hidden' }} />
+                        <div
+                          style={{
+                            width: '40px',
+                            height: '20px',
+                            backgroundColor: '#3b82f6',
+                            borderRadius: '10px',
+                            position: 'relative',
+                          }}
+                        >
+                          <div
+                            style={{
+                              position: 'absolute',
+                              top: '2px',
+                              right: '2px',
+                              width: '16px',
+                              height: '16px',
+                              backgroundColor: 'white',
+                              borderRadius: '50%',
+                            }}
+                          />
+                        </div>
                       </label>
                     </div>
                   ))}
@@ -138,52 +251,100 @@ export default function SettingsPage() {
             )}
 
             {activeTab === "security" && (
-              <div className="space-y-6">
-                <h2 className="text-lg font-semibold">Security Settings</h2>
+              <div>
+                <h2 style={{ fontSize: '16px', fontWeight: 600, color: '#fafafa', margin: '0 0 24px 0' }}>Security Settings</h2>
 
-                <div className="space-y-6">
-                  <div>
-                    <h3 className="font-medium text-gray-900 mb-3">Change Password</h3>
-                    <div className="space-y-4 max-w-md">
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                          Current Password
-                        </label>
-                        <input
-                          type="password"
-                          className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                          New Password
-                        </label>
-                        <input
-                          type="password"
-                          className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                          Confirm New Password
-                        </label>
-                        <input
-                          type="password"
-                          className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        />
-                      </div>
-                      <button className="px-4 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors">
-                        Update Password
-                      </button>
+                <div>
+                  <h3 style={{ fontWeight: 500, color: '#fafafa', fontSize: '14px', margin: '0 0 16px 0' }}>Change Password</h3>
+                  <div style={{ maxWidth: '400px', display: 'flex', flexDirection: 'column', gap: '16px', marginBottom: '24px' }}>
+                    <div>
+                      <label style={{ display: 'block', fontSize: '13px', fontWeight: 500, color: '#a1a1aa', marginBottom: '8px' }}>
+                        Current Password
+                      </label>
+                      <input
+                        type="password"
+                        style={{
+                          width: '100%',
+                          padding: '12px 16px',
+                          backgroundColor: '#0f1117',
+                          border: '1px solid #27272a',
+                          borderRadius: '10px',
+                          color: '#fafafa',
+                          fontSize: '14px',
+                          outline: 'none',
+                        }}
+                      />
                     </div>
+                    <div>
+                      <label style={{ display: 'block', fontSize: '13px', fontWeight: 500, color: '#a1a1aa', marginBottom: '8px' }}>
+                        New Password
+                      </label>
+                      <input
+                        type="password"
+                        style={{
+                          width: '100%',
+                          padding: '12px 16px',
+                          backgroundColor: '#0f1117',
+                          border: '1px solid #27272a',
+                          borderRadius: '10px',
+                          color: '#fafafa',
+                          fontSize: '14px',
+                          outline: 'none',
+                        }}
+                      />
+                    </div>
+                    <div>
+                      <label style={{ display: 'block', fontSize: '13px', fontWeight: 500, color: '#a1a1aa', marginBottom: '8px' }}>
+                        Confirm New Password
+                      </label>
+                      <input
+                        type="password"
+                        style={{
+                          width: '100%',
+                          padding: '12px 16px',
+                          backgroundColor: '#0f1117',
+                          border: '1px solid #27272a',
+                          borderRadius: '10px',
+                          color: '#fafafa',
+                          fontSize: '14px',
+                          outline: 'none',
+                        }}
+                      />
+                    </div>
+                    <button
+                      style={{
+                        padding: '10px 16px',
+                        backgroundColor: '#3b82f6',
+                        border: 'none',
+                        borderRadius: '10px',
+                        fontSize: '13px',
+                        fontWeight: 500,
+                        color: 'white',
+                        cursor: 'pointer',
+                        width: 'fit-content',
+                      }}
+                    >
+                      Update Password
+                    </button>
                   </div>
 
-                  <div className="border-t border-gray-200 pt-6">
-                    <h3 className="font-medium text-gray-900 mb-3">Two-Factor Authentication</h3>
-                    <p className="text-sm text-gray-500 mb-3">
+                  <div style={{ borderTop: '1px solid #27272a', paddingTop: '24px' }}>
+                    <h3 style={{ fontWeight: 500, color: '#fafafa', fontSize: '14px', margin: '0 0 8px 0' }}>Two-Factor Authentication</h3>
+                    <p style={{ fontSize: '12px', color: '#52525b', margin: '0 0 16px 0' }}>
                       Add an extra layer of security to your account
                     </p>
-                    <button className="px-4 py-2 border border-gray-200 rounded-lg text-sm font-medium hover:bg-gray-50 transition-colors">
+                    <button
+                      style={{
+                        padding: '10px 16px',
+                        backgroundColor: '#27272a',
+                        border: '1px solid #3f3f46',
+                        borderRadius: '10px',
+                        fontSize: '13px',
+                        fontWeight: 500,
+                        color: '#a1a1aa',
+                        cursor: 'pointer',
+                      }}
+                    >
                       Enable 2FA
                     </button>
                   </div>
@@ -192,54 +353,110 @@ export default function SettingsPage() {
             )}
 
             {activeTab === "store" && (
-              <div className="space-y-6">
-                <h2 className="text-lg font-semibold">Store Settings</h2>
+              <div>
+                <h2 style={{ fontSize: '16px', fontWeight: 600, color: '#fafafa', margin: '0 0 24px 0' }}>Store Settings</h2>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', marginBottom: '24px' }}>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <label style={{ display: 'block', fontSize: '13px', fontWeight: 500, color: '#a1a1aa', marginBottom: '8px' }}>
                       Store Name
                     </label>
                     <input
                       type="text"
                       defaultValue="JUSTCOM"
-                      className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      style={{
+                        width: '100%',
+                        padding: '12px 16px',
+                        backgroundColor: '#0f1117',
+                        border: '1px solid #27272a',
+                        borderRadius: '10px',
+                        color: '#fafafa',
+                        fontSize: '14px',
+                        outline: 'none',
+                      }}
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <label style={{ display: 'block', fontSize: '13px', fontWeight: 500, color: '#a1a1aa', marginBottom: '8px' }}>
                       Currency
                     </label>
-                    <select className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <select
+                      style={{
+                        width: '100%',
+                        padding: '12px 16px',
+                        backgroundColor: '#0f1117',
+                        border: '1px solid #27272a',
+                        borderRadius: '10px',
+                        color: '#fafafa',
+                        fontSize: '14px',
+                        outline: 'none',
+                        cursor: 'pointer',
+                      }}
+                    >
                       <option>EUR (€)</option>
                       <option>USD ($)</option>
                       <option>GBP (£)</option>
                     </select>
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <label style={{ display: 'block', fontSize: '13px', fontWeight: 500, color: '#a1a1aa', marginBottom: '8px' }}>
                       Timezone
                     </label>
-                    <select className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <select
+                      style={{
+                        width: '100%',
+                        padding: '12px 16px',
+                        backgroundColor: '#0f1117',
+                        border: '1px solid #27272a',
+                        borderRadius: '10px',
+                        color: '#fafafa',
+                        fontSize: '14px',
+                        outline: 'none',
+                        cursor: 'pointer',
+                      }}
+                    >
                       <option>Europe/Berlin (CET)</option>
                       <option>Europe/London (GMT)</option>
                       <option>America/New_York (EST)</option>
                     </select>
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <label style={{ display: 'block', fontSize: '13px', fontWeight: 500, color: '#a1a1aa', marginBottom: '8px' }}>
                       Tax Rate (%)
                     </label>
                     <input
                       type="number"
                       defaultValue="19"
-                      className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      style={{
+                        width: '100%',
+                        padding: '12px 16px',
+                        backgroundColor: '#0f1117',
+                        border: '1px solid #27272a',
+                        borderRadius: '10px',
+                        color: '#fafafa',
+                        fontSize: '14px',
+                        outline: 'none',
+                      }}
                     />
                   </div>
                 </div>
 
-                <button className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors">
-                  <Save size={18} />
+                <button
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '8px',
+                    padding: '10px 16px',
+                    backgroundColor: '#3b82f6',
+                    border: 'none',
+                    borderRadius: '10px',
+                    fontSize: '13px',
+                    fontWeight: 500,
+                    color: 'white',
+                    cursor: 'pointer',
+                  }}
+                >
+                  <Save size={14} />
                   Save Changes
                 </button>
               </div>

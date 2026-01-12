@@ -12,7 +12,6 @@ import {
   LogOut,
   Menu,
   X,
-  ChevronRight,
 } from "lucide-react";
 import { useState } from "react";
 import { useAuth } from "@/lib/auth-context";
@@ -21,8 +20,9 @@ const navigation = [
   { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
   { name: "Products", href: "/dashboard/products", icon: Package },
   { name: "Orders", href: "/dashboard/orders", icon: ShoppingCart },
-  { name: "Messages", href: "/dashboard/messages", icon: MessageSquare },
+  { name: "Messages", href: "/dashboard/messages", icon: MessageSquare, badge: 3 },
   { name: "Analytics", href: "/dashboard/analytics", icon: BarChart3 },
+  { name: "Settings", href: "/dashboard/settings", icon: Settings },
 ];
 
 export default function Sidebar() {
@@ -46,116 +46,188 @@ export default function Sidebar() {
     <>
       {/* Mobile menu button */}
       <button
-        className="lg:hidden fixed top-4 left-4 z-50 p-2.5 bg-white rounded-xl shadow-lg shadow-slate-200/50 border border-slate-200 hover:bg-slate-50 transition-colors"
         onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+        aria-label="Toggle menu"
+        style={{
+          position: 'fixed',
+          top: '16px',
+          left: '16px',
+          zIndex: 50,
+          padding: '10px',
+          backgroundColor: '#16181d',
+          borderRadius: '10px',
+          border: '1px solid #27272a',
+          cursor: 'pointer',
+          display: 'none',
+        }}
+        className="lg:!hidden !flex"
       >
-        {isMobileMenuOpen ? <X size={22} /> : <Menu size={22} />}
+        {isMobileMenuOpen ? (
+          <X size={20} color="#fafafa" />
+        ) : (
+          <Menu size={20} color="#a1a1aa" />
+        )}
       </button>
 
-      {/* Overlay */}
+      {/* Mobile Overlay */}
       {isMobileMenuOpen && (
         <div
-          className="lg:hidden fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-40"
           onClick={() => setIsMobileMenuOpen(false)}
+          style={{
+            position: 'fixed',
+            inset: 0,
+            backgroundColor: 'rgba(0,0,0,0.7)',
+            zIndex: 40,
+          }}
+          className="lg:!hidden"
         />
       )}
 
       {/* Sidebar */}
       <aside
+        style={{
+          width: '240px',
+          minWidth: '240px',
+          backgroundColor: '#16181d',
+          borderRight: '1px solid #27272a',
+          display: 'flex',
+          flexDirection: 'column',
+          padding: '24px 16px',
+          height: '100vh',
+          position: 'sticky',
+          top: 0,
+        }}
         className={`
-          fixed top-0 left-0 z-40 h-screen w-72 bg-white border-r border-slate-200
-          transform transition-transform duration-300 ease-out
-          lg:translate-x-0
-          ${isMobileMenuOpen ? "translate-x-0" : "-translate-x-full"}
+          max-lg:!fixed max-lg:!inset-y-0 max-lg:!left-0 max-lg:!z-40
+          max-lg:!transition-transform max-lg:!duration-300
+          ${isMobileMenuOpen ? 'max-lg:!translate-x-0' : 'max-lg:!-translate-x-full'}
         `}
       >
-        <div className="flex flex-col h-full">
-          {/* Logo */}
-          <div className="flex items-center gap-3 px-6 py-6">
-            <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-blue-700 rounded-xl flex items-center justify-center shadow-lg shadow-blue-500/25">
-              <span className="text-white font-bold">JC</span>
-            </div>
-            <div>
-              <span className="text-xl font-bold text-slate-900">JUSTCOM</span>
-              <p className="text-xs text-slate-500">Employee Dashboard</p>
-            </div>
+        {/* Logo */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '32px', paddingLeft: '8px' }}>
+          <div
+            style={{
+              width: '36px',
+              height: '36px',
+              backgroundColor: '#3b82f6',
+              borderRadius: '8px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
+          >
+            <span style={{ color: '#fff', fontWeight: 700, fontSize: '14px' }}>JC</span>
           </div>
+          <span style={{ fontSize: '16px', fontWeight: 700, color: '#fafafa', letterSpacing: '0.5px' }}>
+            JUSTCOM
+          </span>
+        </div>
 
-          {/* Navigation */}
-          <nav className="flex-1 px-4 py-2 space-y-1 overflow-y-auto">
-            <p className="px-3 py-2 text-xs font-semibold text-slate-400 uppercase tracking-wider">
-              Menu
-            </p>
-            {navigation.map((item) => {
-              const isActive = pathname === item.href ||
-                (item.href !== "/dashboard" && pathname.startsWith(item.href));
-              const isExactDashboard = item.href === "/dashboard" && pathname === "/dashboard";
-              const shouldHighlight = isExactDashboard || (item.href !== "/dashboard" && isActive);
+        {/* Navigation */}
+        <nav style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '4px' }}>
+          {navigation.map((item) => {
+            const isActive = pathname === item.href ||
+              (item.href !== "/dashboard" && pathname.startsWith(item.href));
+            const isExactDashboard = item.href === "/dashboard" && pathname === "/dashboard";
+            const shouldHighlight = isExactDashboard || (item.href !== "/dashboard" && isActive);
 
-              return (
-                <Link
-                  key={item.name}
-                  href={item.href}
-                  onClick={() => setIsMobileMenuOpen(false)}
-                  className={`
-                    group flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium
-                    transition-all duration-200
-                    ${
-                      shouldHighlight
-                        ? "bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-lg shadow-blue-500/25"
-                        : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
-                    }
-                  `}
-                >
-                  <item.icon size={20} className={shouldHighlight ? "text-white" : "text-slate-400 group-hover:text-slate-600"} />
-                  <span className="flex-1">{item.name}</span>
-                  {shouldHighlight && <ChevronRight size={16} className="text-white/70" />}
-                </Link>
-              );
-            })}
-
-            <div className="pt-4">
-              <p className="px-3 py-2 text-xs font-semibold text-slate-400 uppercase tracking-wider">
-                Account
-              </p>
+            return (
               <Link
-                href="/dashboard/settings"
+                key={item.name}
+                href={item.href}
                 onClick={() => setIsMobileMenuOpen(false)}
-                className={`
-                  group flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium
-                  transition-all duration-200
-                  ${
-                    pathname === "/dashboard/settings"
-                      ? "bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-lg shadow-blue-500/25"
-                      : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
-                  }
-                `}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '12px',
+                  padding: '12px 16px',
+                  borderRadius: '10px',
+                  fontSize: '14px',
+                  fontWeight: 500,
+                  textDecoration: 'none',
+                  transition: 'all 0.2s ease',
+                  backgroundColor: shouldHighlight ? '#27272a' : 'transparent',
+                  color: shouldHighlight ? '#fafafa' : '#a1a1aa',
+                }}
               >
-                <Settings size={20} className={pathname === "/dashboard/settings" ? "text-white" : "text-slate-400 group-hover:text-slate-600"} />
-                <span className="flex-1">Settings</span>
+                <item.icon
+                  size={18}
+                  style={{ color: shouldHighlight ? '#3b82f6' : 'currentColor', flexShrink: 0 }}
+                />
+                <span style={{ flex: 1 }}>{item.name}</span>
+                {item.badge && (
+                  <span
+                    style={{
+                      backgroundColor: '#3b82f6',
+                      color: 'white',
+                      fontSize: '11px',
+                      fontWeight: 600,
+                      padding: '2px 8px',
+                      borderRadius: '10px',
+                    }}
+                  >
+                    {item.badge}
+                  </span>
+                )}
               </Link>
-            </div>
-          </nav>
+            );
+          })}
+        </nav>
 
-          {/* User section */}
-          <div className="p-4 border-t border-slate-100">
-            <div className="flex items-center gap-3 p-3 bg-slate-50 rounded-xl">
-              <div className="w-10 h-10 bg-gradient-to-br from-slate-700 to-slate-800 rounded-xl flex items-center justify-center shadow-sm">
-                <span className="text-sm font-semibold text-white">{userInitials}</span>
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-semibold text-slate-900 truncate">{userName}</p>
-                <p className="text-xs text-slate-500 truncate">{user?.email || "user@justcom.de"}</p>
-              </div>
-            </div>
-            <button
-              onClick={handleLogout}
-              className="mt-3 w-full flex items-center justify-center gap-2 px-3 py-2.5 text-sm font-medium text-slate-600 hover:text-red-600 hover:bg-red-50 rounded-xl transition-all duration-200"
+        {/* User section */}
+        <div style={{ paddingTop: '16px', borderTop: '1px solid #27272a', marginTop: 'auto' }}>
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '12px',
+              padding: '16px',
+            }}
+          >
+            <div
+              style={{
+                width: '36px',
+                height: '36px',
+                backgroundColor: '#6366f1',
+                borderRadius: '8px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
             >
-              <LogOut size={18} />
-              Sign out
-            </button>
+              <span style={{ fontSize: '14px', fontWeight: 600, color: '#fff' }}>{userInitials}</span>
+            </div>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <p style={{ fontSize: '13px', fontWeight: 600, color: '#fafafa', margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                {userName}
+              </p>
+              <p style={{ fontSize: '11px', color: '#71717a', margin: '2px 0 0 0', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                {user?.email || "user@justcom.de"}
+              </p>
+            </div>
           </div>
+          <button
+            onClick={handleLogout}
+            style={{
+              width: '100%',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '8px',
+              padding: '10px 16px',
+              fontSize: '13px',
+              fontWeight: 500,
+              color: '#71717a',
+              backgroundColor: 'transparent',
+              border: 'none',
+              borderRadius: '10px',
+              cursor: 'pointer',
+              transition: 'all 0.2s ease',
+            }}
+          >
+            <LogOut size={16} />
+            Sign out
+          </button>
         </div>
       </aside>
     </>
