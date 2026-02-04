@@ -112,6 +112,56 @@ export interface SalesData {
   date: string;
 }
 
+export interface Campaign {
+  id: string;
+  title: string;
+  subtitle?: string;
+  cta_text?: string;
+  background_color?: string;
+  image_name?: string;
+  destination_category?: string;
+  start_date: string;
+  end_date: string;
+  priority: number;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface Customer {
+  id: string;
+  email: string;
+  first_name: string;
+  last_name: string;
+  created_at: string;
+  order_count?: number;
+  total_spent?: number;
+}
+
+export interface LoyaltyAccount {
+  id: string;
+  user_id: string;
+  points_balance: number;
+  lifetime_earned: number;
+  tier: "free" | "premium";
+  subscription_expires_at?: string;
+  created_at: string;
+}
+
+export interface LoyaltyVoucher {
+  id: string;
+  user_id: string;
+  code: string;
+  value: number;
+  points_cost: number;
+  status: "active" | "used" | "expired";
+  used_at?: string;
+  expires_at: string;
+  created_at: string;
+  customer_name?: string;
+  customer_email?: string;
+}
+
 export interface ApiError {
   message: string;
   code?: string;
@@ -361,6 +411,57 @@ class ApiClient {
       `/admin/analytics/sales?period=${period}`
     );
     return Array.isArray(response) ? response : response.data || [];
+  }
+
+  // Campaigns
+  async getCampaigns(all: boolean = true): Promise<Campaign[]> {
+    const endpoint = all ? "/campaigns?all=true" : "/campaigns";
+    const response = await this.request<Campaign[] | { campaigns: Campaign[] }>(endpoint);
+    return Array.isArray(response) ? response : response.campaigns || [];
+  }
+
+  async getCampaign(id: string): Promise<Campaign> {
+    return this.request<Campaign>(`/campaigns/${id}`);
+  }
+
+  async createCampaign(data: Partial<Campaign>): Promise<Campaign> {
+    return this.request<Campaign>("/campaigns", {
+      method: "POST",
+      body: JSON.stringify(data),
+    });
+  }
+
+  async updateCampaign(id: string, data: Partial<Campaign>): Promise<Campaign> {
+    return this.request<Campaign>(`/campaigns/${id}`, {
+      method: "PUT",
+      body: JSON.stringify(data),
+    });
+  }
+
+  async deleteCampaign(id: string): Promise<void> {
+    return this.request<void>(`/campaigns/${id}`, {
+      method: "DELETE",
+    });
+  }
+
+  // Customers (Admin)
+  async getCustomers(): Promise<Customer[]> {
+    const response = await this.request<Customer[] | { customers: Customer[] }>("/admin/customers");
+    return Array.isArray(response) ? response : response.customers || [];
+  }
+
+  async getCustomer(id: string): Promise<Customer & { orders: Order[]; loyalty?: LoyaltyAccount }> {
+    return this.request(`/admin/customers/${id}`);
+  }
+
+  // Loyalty (Admin)
+  async getVouchers(): Promise<LoyaltyVoucher[]> {
+    const response = await this.request<LoyaltyVoucher[] | { vouchers: LoyaltyVoucher[] }>("/admin/loyalty/vouchers");
+    return Array.isArray(response) ? response : response.vouchers || [];
+  }
+
+  async getLoyaltyStats(): Promise<{ total_points_issued: number; total_vouchers_redeemed: number; premium_subscribers: number }> {
+    return this.request("/admin/loyalty/stats");
   }
 }
 

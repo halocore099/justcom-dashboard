@@ -18,6 +18,7 @@ import {
   User,
   Hash,
   Save,
+  Download,
 } from "lucide-react";
 import { api, Order } from "@/lib/api";
 import { format } from "date-fns";
@@ -86,11 +87,20 @@ export default function OrdersPage() {
   }, [selectedOrder]);
 
   const filteredOrders = orders.filter((order) => {
-    const matchesSearch =
-      order.order_number?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      order.customer_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      order.customer_email?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      order.shipping_address?.name?.toLowerCase().includes(searchQuery.toLowerCase());
+    const query = searchQuery.toLowerCase();
+    // Search in order fields
+    const matchesOrderFields =
+      order.order_number?.toLowerCase().includes(query) ||
+      order.customer_name?.toLowerCase().includes(query) ||
+      order.customer_email?.toLowerCase().includes(query) ||
+      order.shipping_address?.name?.toLowerCase().includes(query);
+    // Search in item article_number and product_number
+    const matchesItemNumbers = order.items?.some((item) =>
+      item.article_number?.toLowerCase().includes(query) ||
+      item.product_number?.toLowerCase().includes(query) ||
+      item.product_name?.toLowerCase().includes(query)
+    );
+    const matchesSearch = matchesOrderFields || matchesItemNumbers;
     const matchesStatus = selectedStatus === "All" || order.status === selectedStatus;
     return matchesSearch && matchesStatus;
   });
@@ -161,6 +171,96 @@ export default function OrdersPage() {
     }
   };
 
+  const exportToCSV = () => {
+    const headers = [
+      "Order Number",
+      "Status",
+      "Customer Name",
+      "Customer Email",
+      "Shipping Name",
+      "Shipping Street",
+      "Shipping City",
+      "Shipping Postal Code",
+      "Shipping Country",
+      "Product Name",
+      "Product Quantity",
+      "Product Price",
+      "Article Number",
+      "Product Number",
+      "Order Total",
+      "Order Date",
+    ];
+
+    const rows: string[][] = [];
+
+    // Use filtered orders for export
+    filteredOrders.forEach((order) => {
+      if (order.items && order.items.length > 0) {
+        order.items.forEach((item, index) => {
+          rows.push([
+            index === 0 ? (order.order_number || "") : "",
+            index === 0 ? order.status : "",
+            index === 0 ? (order.customer_name || "") : "",
+            index === 0 ? (order.customer_email || "") : "",
+            index === 0 ? (order.shipping_address?.name || "") : "",
+            index === 0 ? (order.shipping_address?.street || "") : "",
+            index === 0 ? (order.shipping_address?.city || "") : "",
+            index === 0 ? (order.shipping_address?.postal_code || "") : "",
+            index === 0 ? (order.shipping_address?.country || "") : "",
+            item.product_name || "",
+            item.quantity.toString(),
+            item.total_price.toFixed(2),
+            item.article_number || "",
+            item.product_number || "",
+            index === 0 ? (order.total_amount?.toFixed(2) || "0.00") : "",
+            index === 0 ? formatDate(order.created_at) : "",
+          ]);
+        });
+      } else {
+        rows.push([
+          order.order_number || "",
+          order.status,
+          order.customer_name || "",
+          order.customer_email || "",
+          order.shipping_address?.name || "",
+          order.shipping_address?.street || "",
+          order.shipping_address?.city || "",
+          order.shipping_address?.postal_code || "",
+          order.shipping_address?.country || "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          order.total_amount?.toFixed(2) || "0.00",
+          formatDate(order.created_at),
+        ]);
+      }
+    });
+
+    const escapeCsvField = (field: string) => {
+      if (field.includes(",") || field.includes('"') || field.includes("\n")) {
+        return `"${field.replace(/"/g, '""')}"`;
+      }
+      return field;
+    };
+
+    const csvContent = [
+      headers.map(escapeCsvField).join(","),
+      ...rows.map((row) => row.map(escapeCsvField).join(",")),
+    ].join("\n");
+
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const link = document.createElement("a");
+    const url = URL.createObjectURL(blob);
+    link.setAttribute("href", url);
+    link.setAttribute("download", `orders_export_${format(new Date(), "yyyy-MM-dd_HHmm")}.csv`);
+    link.style.visibility = "hidden";
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   if (isLoading) {
     return (
       <div
@@ -190,25 +290,47 @@ export default function OrdersPage() {
             </p>
             <h1 style={{ fontSize: '28px', fontWeight: 600, color: '#fafafa', margin: '4px 0 0 0' }}>Orders</h1>
           </div>
-          <button
-            onClick={fetchOrders}
-            style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: '8px',
-              padding: '10px 16px',
-              backgroundColor: '#27272a',
-              border: '1px solid #3f3f46',
-              borderRadius: '10px',
-              fontSize: '13px',
-              fontWeight: 500,
-              color: '#a1a1aa',
-              cursor: 'pointer',
-            }}
-          >
-            <RefreshCw size={14} />
-            Refresh
-          </button>
+          <div style={{ display: 'flex', gap: '8px' }}>
+            <button
+              onClick={exportToCSV}
+              disabled={filteredOrders.length === 0}
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '8px',
+                padding: '10px 16px',
+                backgroundColor: filteredOrders.length === 0 ? '#1a1a1a' : '#27272a',
+                border: '1px solid #3f3f46',
+                borderRadius: '10px',
+                fontSize: '13px',
+                fontWeight: 500,
+                color: filteredOrders.length === 0 ? '#52525b' : '#a1a1aa',
+                cursor: filteredOrders.length === 0 ? 'not-allowed' : 'pointer',
+              }}
+            >
+              <Download size={14} />
+              Export CSV
+            </button>
+            <button
+              onClick={fetchOrders}
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '8px',
+                padding: '10px 16px',
+                backgroundColor: '#27272a',
+                border: '1px solid #3f3f46',
+                borderRadius: '10px',
+                fontSize: '13px',
+                fontWeight: 500,
+                color: '#a1a1aa',
+                cursor: 'pointer',
+              }}
+            >
+              <RefreshCw size={14} />
+              Refresh
+            </button>
+          </div>
         </div>
       </div>
 
@@ -284,7 +406,7 @@ export default function OrdersPage() {
           />
           <input
             type="text"
-            placeholder="Search orders..."
+            placeholder="Search by order #, customer, product, or article number..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             style={{

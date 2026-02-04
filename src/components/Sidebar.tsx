@@ -12,6 +12,9 @@ import {
   LogOut,
   Menu,
   X,
+  Megaphone,
+  Users,
+  Gift,
 } from "lucide-react";
 import { useState } from "react";
 import { useAuth } from "@/lib/auth-context";
@@ -20,6 +23,9 @@ const navigation = [
   { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
   { name: "Products", href: "/dashboard/products", icon: Package },
   { name: "Orders", href: "/dashboard/orders", icon: ShoppingCart },
+  { name: "Customers", href: "/dashboard/customers", icon: Users },
+  { name: "Campaigns", href: "/dashboard/campaigns", icon: Megaphone },
+  { name: "Loyalty", href: "/dashboard/loyalty", icon: Gift },
   { name: "Messages", href: "/dashboard/messages", icon: MessageSquare, badge: 3 },
   { name: "Analytics", href: "/dashboard/analytics", icon: BarChart3 },
   { name: "Settings", href: "/dashboard/settings", icon: Settings },

@@ -62,7 +62,7 @@ export default function ProductsPage() {
 
   useEffect(() => {
     const filter = searchParams.get("filter");
-    if (filter === "low-stock" || filter === "out-of-stock") {
+    if (filter === "sold" || filter === "available") {
       setSelectedCategory("All");
     }
   }, [searchParams]);
@@ -74,11 +74,11 @@ export default function ProductsPage() {
       product.category.toLowerCase() === selectedCategory.toLowerCase();
 
     const filter = searchParams.get("filter");
-    if (filter === "low-stock") {
-      return matchesSearch && matchesCategory && product.stock_count > 0 && product.stock_count < 5;
-    }
-    if (filter === "out-of-stock") {
+    if (filter === "sold") {
       return matchesSearch && matchesCategory && product.stock_count === 0;
+    }
+    if (filter === "available") {
+      return matchesSearch && matchesCategory && product.stock_count > 0;
     }
 
     return matchesSearch && matchesCategory;
@@ -87,8 +87,8 @@ export default function ProductsPage() {
   const stats = {
     total: products.length,
     active: products.filter((p) => p.is_active).length,
-    lowStock: products.filter((p) => p.stock_count > 0 && p.stock_count < 5).length,
-    outOfStock: products.filter((p) => p.stock_count === 0).length,
+    available: products.filter((p) => p.stock_count > 0).length,
+    sold: products.filter((p) => p.stock_count === 0).length,
   };
 
   const resetForm = () => {
@@ -99,7 +99,7 @@ export default function ProductsPage() {
       original_price: "",
       category: "iPhone",
       health_rating: 5,
-      stock_count: "",
+      stock_count: "1",
       image_url: "",
       is_featured: false,
       is_active: true,
@@ -273,8 +273,8 @@ export default function ProductsPage() {
         {[
           { label: 'Total Products', value: stats.total, color: '#fafafa' },
           { label: 'Active', value: stats.active, color: '#10b981' },
-          { label: 'Low Stock', value: stats.lowStock, color: '#f59e0b' },
-          { label: 'Out of Stock', value: stats.outOfStock, color: '#ef4444' },
+          { label: 'Available', value: stats.available, color: '#3b82f6' },
+          { label: 'Sold', value: stats.sold, color: '#71717a' },
         ].map((stat, idx) => (
           <div
             key={idx}
@@ -473,11 +473,11 @@ export default function ProductsPage() {
                       borderRadius: '6px',
                       fontSize: '11px',
                       fontWeight: 500,
-                      backgroundColor: product.stock_count === 0 ? 'rgba(239, 68, 68, 0.1)' : product.stock_count < 5 ? 'rgba(245, 158, 11, 0.1)' : 'rgba(16, 185, 129, 0.1)',
-                      color: product.stock_count === 0 ? '#ef4444' : product.stock_count < 5 ? '#f59e0b' : '#10b981',
+                      backgroundColor: product.stock_count === 0 ? 'rgba(113, 113, 122, 0.1)' : 'rgba(16, 185, 129, 0.1)',
+                      color: product.stock_count === 0 ? '#71717a' : '#10b981',
                     }}
                   >
-                    {product.stock_count === 0 ? "Out of stock" : `${product.stock_count} in stock`}
+                    {product.stock_count === 0 ? "Sold" : "Available"}
                   </div>
                 </div>
               </div>
@@ -663,23 +663,48 @@ export default function ProductsPage() {
                   </select>
                 </div>
                 <div>
-                  <label style={{ display: 'block', fontSize: '13px', fontWeight: 500, color: '#a1a1aa', marginBottom: '8px' }}>Stock Count *</label>
-                  <input
-                    type="number"
-                    value={formData.stock_count}
-                    onChange={(e) => setFormData({ ...formData, stock_count: e.target.value })}
-                    placeholder="10"
+                  <label style={{ display: 'block', fontSize: '13px', fontWeight: 500, color: '#a1a1aa', marginBottom: '8px' }}>Availability</label>
+                  <div
+                    onClick={() => setFormData({ ...formData, stock_count: formData.stock_count === "0" ? "1" : "0" })}
                     style={{
                       width: '100%',
                       padding: '12px 16px',
                       backgroundColor: '#0f1117',
                       border: '1px solid #27272a',
                       borderRadius: '10px',
-                      color: '#fafafa',
-                      fontSize: '14px',
-                      outline: 'none',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
                     }}
-                  />
+                  >
+                    <span style={{ fontSize: '14px', color: formData.stock_count === "0" ? '#71717a' : '#10b981' }}>
+                      {formData.stock_count === "0" ? "Sold" : "Available"}
+                    </span>
+                    <div
+                      style={{
+                        width: '40px',
+                        height: '22px',
+                        borderRadius: '11px',
+                        backgroundColor: formData.stock_count === "0" ? '#3f3f46' : '#10b981',
+                        position: 'relative',
+                        transition: 'background-color 0.2s',
+                      }}
+                    >
+                      <div
+                        style={{
+                          width: '18px',
+                          height: '18px',
+                          borderRadius: '50%',
+                          backgroundColor: 'white',
+                          position: 'absolute',
+                          top: '2px',
+                          left: formData.stock_count === "0" ? '2px' : '20px',
+                          transition: 'left 0.2s',
+                        }}
+                      />
+                    </div>
+                  </div>
                 </div>
               </div>
 
